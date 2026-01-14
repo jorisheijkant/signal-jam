@@ -1,0 +1,15 @@
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Database dumps
+*.sql
+*.dump
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
