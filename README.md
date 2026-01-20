@@ -50,4 +50,4 @@ All configuration is done through environment variables. See `.env.example`.
 
 ## Database Schema
 
-There is a fixed schema in `database/schema.sql`. All providers must use this schema.
+There is a fixed schema in `database/schema.sql`. All providers must use this schema. see the `README` in this folder for more information.
