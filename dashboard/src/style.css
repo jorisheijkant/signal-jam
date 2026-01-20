@@ -1,3 +1,47 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Stormy - Teal */
+  --color-stormy-100: #E6F2F3;
+  --color-stormy-200: #BFDFDF;
+  --color-stormy-300: #99CDCC;
+  --color-stormy-400: #73BAB9;
+  --color-stormy-500: #4DA8A6;
+  --color-stormy-600: #2E8489;
+  --color-stormy-700: #1A5E63;
+  --color-stormy-800: #154B4F;
+  --color-stormy-900: #10383B;
+
+  /* Scarlet - Red */
+  --color-scarlet-100: #FDECED;
+  --color-scarlet-200: #F9D0D2;
+  --color-scarlet-300: #F5B4B7;
+  --color-scarlet-400: #F1989C;
+  --color-scarlet-500: #ED7C81;
+  --color-scarlet-600: #E25E66;
+  --color-scarlet-700: #D64045;
+  --color-scarlet-800: #AB3337;
+  --color-scarlet-900: #802629;
+
+  /* Lavender - Purple */
+  --color-lavender-100: #F0F0F9;
+  --color-lavender-200: #DBDAEF;
+  --color-lavender-300: #C5C4E5;
+  --color-lavender-400: #B0AFDB;
+  --color-lavender-500: #9B99D1;
+  --color-lavender-600: #8F8EC6;
+  --color-lavender-700: #8A89C0;
+  --color-lavender-800: #6D6B99;
+  --color-lavender-900: #514F73;
+
+  /* Amethyst - Light Purple */
+  --color-amethyst-100: #F7F2FA;
+  --color-amethyst-200: #E9DDF1;
+  --color-amethyst-300: #DBC8E8;
+  --color-amethyst-400: #CDB3DF;
+  --color-amethyst-500: #BF9ED6;
+  --color-amethyst-600: #B694D1;
+  --color-amethyst-700: #B084CC;
+  --color-amethyst-800: #8D6AA3;
+  --color-amethyst-900: #6A4F7A;
+}
