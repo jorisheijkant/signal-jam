@@ -1,8 +1,7 @@
 import random
 import time
 
-def scroll_to_end(driver):
-    max_scrolls = 200
+def scroll_to_end(driver, max_scrolls=5):
     scroll_interval = 3
     scrolls_without_change = 0
     max_scrolls_without_change = 3

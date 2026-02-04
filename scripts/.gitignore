@@ -98,3 +98,12 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Scraping tools
+scraping_tools/
+!scraping_tools/stealth.js
+!scraping_tools/.gitkeep
+
+# Data files 
+data/
+!data/.gitkeep
