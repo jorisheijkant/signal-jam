@@ -8,28 +8,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import * as d3 from 'd3'
+import { getPostsPerDay } from '../database'
 
 const chartContainer = ref(null)
 
-// Generate 20 days of dummy data
-const generateData = () => {
-  const data = []
-  const today = new Date()
-
-  for (let i = 19; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date,
-      value: Math.floor(Math.random() * 50) + 10 // Random value between 10-60
-    })
+onMounted(async () => {
+  const { data, error } = await getPostsPerDay(20)
+  if (error) {
+    console.error('Failed to fetch daily activity:', error)
+    return
   }
-
-  return data
-}
-
-onMounted(() => {
-  const data = generateData()
 
   // Chart dimensions - responsive to container
   const margin = { top: 10, right: 10, bottom: 30, left: 40 }
@@ -53,7 +41,7 @@ onMounted(() => {
 
   // Y scale
   const y = d3.scaleLinear()
-    .domain([0, d3.max(data, d => d.value)])
+    .domain([0, d3.max(data, d => d.count)])
     .range([height, 0])
 
   // X axis - minimalist style
@@ -63,7 +51,8 @@ onMounted(() => {
       .tickFormat((d, i) => {
         // Only show every 5th date
         if (i % 5 === 0) {
-          return d3.timeFormat('%d/%m')(d)
+          const parts = d.split('-')
+          return `${parts[2]}/${parts[1]}`
         }
         return ''
       })
@@ -110,9 +99,9 @@ onMounted(() => {
     .append('rect')
     .attr('class', 'bar')
     .attr('x', d => x(d.date))
-    .attr('y', d => y(d.value))
+    .attr('y', d => y(d.count))
     .attr('width', x.bandwidth())
-    .attr('height', d => height - y(d.value))
+    .attr('height', d => height - y(d.count))
     .attr('fill', '#8A89C0') // lavender color
     .attr('rx', 2) // Slightly rounded corners
     .on('mouseover', function(event, d) {

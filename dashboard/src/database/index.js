@@ -14,5 +14,7 @@ if (!db) {
 }
 
 export const getPosts = db.getPosts
+export const getPostsPerDay = db.getPostsPerDay
+export const getMostActiveAccounts = db.getMostActiveAccounts
 
 export default db

@@ -7,6 +7,13 @@
         <TiktokEmbed v-else-if="post.platform === 'tiktok'" :url="post.url" />
         <FacebookEmbed v-else-if="post.platform === 'facebook'" :url="post.url" />
       </div>
+      <button
+        v-if="hasMore"
+        @click="loadMore"
+        class="w-full py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+      >
+        Meer laden
+      </button>
     </div>
   </div>
 </template>
@@ -18,14 +25,21 @@ import TwitterEmbed from './embeds/TwitterEmbed.vue'
 import TiktokEmbed from './embeds/TiktokEmbed.vue'
 import FacebookEmbed from './embeds/FacebookEmbed.vue'
 
+const PAGE_SIZE = 10
 const posts = ref([])
+const hasMore = ref(true)
 
-onMounted(async () => {
-  const { data, error } = await getPosts()
+async function loadMore() {
+  const { data, error } = await getPosts(PAGE_SIZE, posts.value.length)
   if (error) {
     console.error('Failed to fetch posts:', error)
     return
   }
-  posts.value = data
-})
+  posts.value.push(...data)
+  if (data.length < PAGE_SIZE) {
+    hasMore.value = false
+  }
+}
+
+onMounted(loadMore)
 </script>

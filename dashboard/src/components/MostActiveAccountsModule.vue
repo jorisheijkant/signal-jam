@@ -9,12 +9,12 @@
       >
         <div class="account-info flex-1">
           <a
-            :href="account.link"
+            :href="account.account_url"
             target="_blank"
             rel="noopener noreferrer"
             class="font-medium text-gray-800 hover:text-blue-600"
           >
-            {{ account.username }}
+            @{{ account.username }}
           </a>
           <p class="text-sm text-gray-500">{{ account.platform }}</p>
         </div>
@@ -27,50 +27,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getMostActiveAccounts } from '../database'
 
-const accounts = ref([
-  {
-    id: 1,
-    username: '@nieuws_alternative',
-    platform: 'X/Twitter',
-    link: 'https://twitter.com/nieuws_alternative',
-    postCount: 247
-  },
-  {
-    id: 2,
-    username: '@waarheid_nu',
-    platform: 'X/Twitter',
-    link: 'https://twitter.com/waarheid_nu',
-    postCount: 189
-  },
-  {
-    id: 3,
-    username: '@media_kritiek',
-    platform: 'X/Twitter',
-    link: 'https://twitter.com/media_kritiek',
-    postCount: 156
-  },
-  {
-    id: 4,
-    username: '@realfacts2024',
-    platform: 'TikTok',
-    link: 'https://www.tiktok.com/@realfacts2024',
-    postCount: 134
-  },
-  {
-    id: 5,
-    username: '@onafhankelijk_nieuws',
-    platform: 'Facebook',
-    link: 'https://www.facebook.com/onafhankelijk.nieuws',
-    postCount: 112
-  },
-  {
-    id: 6,
-    username: '@vrije_media_nl',
-    platform: 'X/Twitter',
-    link: 'https://twitter.com/vrije_media_nl',
-    postCount: 98
+const accounts = ref([])
+
+onMounted(async () => {
+  const { data, error } = await getMostActiveAccounts()
+  if (error) {
+    console.error('Failed to fetch most active accounts:', error)
+    return
   }
-])
+  accounts.value = data
+})
 </script>
