@@ -12,31 +12,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getPosts } from '../database'
 import TwitterEmbed from './embeds/TwitterEmbed.vue'
 import TiktokEmbed from './embeds/TiktokEmbed.vue'
 import FacebookEmbed from './embeds/FacebookEmbed.vue'
 
-const posts = ref([
-  {
-    id: 1,
-    platform: 'twitter',
-    url: 'https://x.com/HeroLancelot/status/1991569470331187639'
-  },
-  {
-    id: 2,
-    platform: 'twitter',
-    url: 'https://x.com/MathildeReali/status/2013167070872035337'
-  },
-  {
-    id: 3,
-    platform: 'tiktok',
-    url: 'https://www.tiktok.com/@3aztiram3/video/7454603483111558422'
-  },
-  {
-    id: 4,
-    platform: 'twitter',
-    url: 'https://x.com/PsiloX/status/2000599864892428476'
+const posts = ref([])
+
+onMounted(async () => {
+  const { data, error } = await getPosts()
+  if (error) {
+    console.error('Failed to fetch posts:', error)
+    return
   }
-])
+  posts.value = data
+})
 </script>
