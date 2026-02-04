@@ -10,19 +10,19 @@ CREATE TYPE post_type AS ENUM ('original', 'reply', 'repost', 'quote');
 CREATE TABLE accounts (
     id SERIAL PRIMARY KEY,
     platform platform NOT NULL,
-    platform_id VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
+    account_url TEXT,
     display_name VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
-    UNIQUE(platform, platform_id)
+    UNIQUE(platform, username)
 );
 
 -- Posts table
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
+    url TEXT,
     platform platform NOT NULL,
-    platform_id VARCHAR(255) NOT NULL,
     account_id INTEGER NOT NULL REFERENCES accounts(id),
 
     content TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE posts (
 
     platform_data JSONB,
 
-    UNIQUE(platform, platform_id)
+    UNIQUE(platform, url)
 );
 
 -- Indexes
