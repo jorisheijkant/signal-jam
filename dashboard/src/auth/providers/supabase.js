@@ -18,7 +18,12 @@ async function init() {
 }
 
 async function signInWithOtp(email) {
-  const { error } = await client.auth.signInWithOtp({ email })
+  const { error } = await client.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: import.meta.env.VITE_AUTH_REDIRECT_URL,
+    },
+  })
   if (error) throw error
 }
 

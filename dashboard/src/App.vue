@@ -1,8 +1,6 @@
 <template>
-  <div class="dashboard-container min-h-screen bg-white p-4 md:p-8 max-w-[1800px] mx-auto flex flex-col">
-    <header class="header p-4 md:p-8 mb-4 md:mb-8 border border-1 border-amethyst-600">
-      <h1 class="text-4xl font-bold">🛰️ Signal Jam</h1>
-    </header>
+  <div v-if="session" class="dashboard-container min-h-screen bg-white p-4 md:p-8 max-w-[1800px] mx-auto flex flex-col">
+    <AppHeader />
     <main class="module-container flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
       <div class="module-column flex flex-col gap-3 md:gap-6">
         <LastModifiedModule />
@@ -23,7 +21,7 @@
   </div>
 
   <!-- Implement when ready and Supabase is properly set up -->
-  <!-- <AuthModule v-else /> -->
+  <AuthModule v-else />
 </template>
 
 <script setup>
@@ -31,6 +29,7 @@ import { onMounted } from 'vue'
 
 import { session, init as initAuth } from './auth'
 
+import AppHeader from './components/AppHeader.vue'
 import AuthModule from './components/AuthModule.vue'
 import AboutModule from './components/AboutModule.vue'
 import LastModifiedModule from './components/LastModifiedModule.vue'
