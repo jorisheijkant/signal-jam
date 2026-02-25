@@ -79,22 +79,41 @@ async function getMostActiveAccounts(limit = 6) {
 }
 
 async function updatePost(id, fields) {
-  const { data, error } = await client
+  console.log('[DB] updatePost →', { id, fields })
+  const response = await client
     .from('posts')
     .update(fields)
     .eq('id', id)
     .select()
 
-  return { data, error }
+  console.log('[DB] updatePost ←', {
+    status: response.status,
+    statusText: response.statusText,
+    data: response.data,
+    error: response.error,
+  })
+
+  if (!response.error && (!response.data || response.data.length === 0)) {
+    console.warn('[DB] updatePost: no rows updated — check RLS policies or if post id exists:', id)
+  }
+
+  return { data: response.data, error: response.error }
 }
 
 async function deletePost(id) {
-  const { error } = await client
+  console.log('[DB] deletePost →', { id })
+  const response = await client
     .from('posts')
     .delete()
     .eq('id', id)
 
-  return { error }
+  console.log('[DB] deletePost ←', {
+    status: response.status,
+    statusText: response.statusText,
+    error: response.error,
+  })
+
+  return { error: response.error }
 }
 
 export default {

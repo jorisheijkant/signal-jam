@@ -2,7 +2,18 @@
   <div class="module posts-module bg-white border border-1 border-amethyst-200 p-4 md:p-8 w-full">
     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Relevante posts</h2>
     <div class="posts-feed overflow-y-auto max-h-[800px] space-y-4">
-      <div v-for="post in posts" :key="post.id" class="post-embed">
+      <div
+        v-for="post in posts"
+        :key="post.id"
+        class="post-embed"
+        :class="post.contains_misinformation ? 'border-l-4 border-amethyst-500 pl-3' : ''"
+      >
+        <span
+          v-if="post.contains_misinformation"
+          class="inline-block mb-2 px-2 py-0.5 text-xs font-medium bg-amethyst-600 text-white rounded-full"
+        >
+          Bevat misinformatie
+        </span>
         <TwitterEmbed v-if="post.platform === 'twitter'" :url="post.url" />
         <TiktokEmbed v-else-if="post.platform === 'tiktok'" :url="post.url" />
         <FacebookEmbed v-else-if="post.platform === 'facebook'" :url="post.url" />

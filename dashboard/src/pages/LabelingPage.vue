@@ -7,6 +7,15 @@
         :key="post.id"
         class="border border-amethyst-200 p-4 md:p-6"
       >
+        <div class="mb-3">
+          <span v-if="post.is_checked" class="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
+            Al gelabeld
+          </span>
+          <span v-else class="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+            Nog labelen
+          </span>
+        </div>
+
         <div class="post-embed mb-4">
           <TwitterEmbed v-if="post.platform === 'twitter'" :url="post.url" />
           <TiktokEmbed v-else-if="post.platform === 'tiktok'" :url="post.url" />
@@ -30,6 +39,15 @@
               class="accent-amethyst-600"
             />
             Bevat misinformatie
+          </label>
+
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              v-model="post._form.is_checked"
+              class="accent-amethyst-600"
+            />
+            Gecheckt
           </label>
 
           <label class="flex flex-col gap-1 text-sm text-gray-700">
@@ -81,6 +99,7 @@ const hasMore = ref(true)
 function addFormFields(post) {
   post._form = {
     not_relevant: false,
+    is_checked: post.is_checked || false,
     contains_misinformation: post.contains_misinformation || false,
     notes: post.notes || '',
   }
@@ -103,6 +122,7 @@ async function loadMore() {
 }
 
 async function submitPost(post) {
+  console.log('[Labeling] submitPost called for post id:', post.id, '| not_relevant:', post._form.not_relevant)
   post._saving = true
   post._saved = false
   post._error = false
@@ -110,22 +130,28 @@ async function submitPost(post) {
   let error
 
   if (post._form.not_relevant) {
-    ({ error } = await deletePost(post.id))
+    console.log('[Labeling] Action: delete post', post.id)
+    ;({ error } = await deletePost(post.id))
   } else {
-    ({ error } = await updatePost(post.id, {
-      is_checked: true,
+    const fields = {
+      is_checked: post._form.is_checked,
       contains_misinformation: post._form.contains_misinformation,
       notes: post._form.notes,
-    }))
+    }
+    console.log('[Labeling] Action: update post', post.id, 'with', fields)
+    ;({ error } = await updatePost(post.id, fields))
   }
 
   post._saving = false
   if (error) {
-    console.error('Failed to update post:', error)
+    console.error('[Labeling] Operation failed for post', post.id, '→ error:', error)
     post._error = true
   } else if (post._form.not_relevant) {
+    console.log('[Labeling] Delete succeeded, removing post from list:', post.id)
     posts.value = posts.value.filter(p => p.id !== post.id)
   } else {
+    console.log('[Labeling] Update succeeded for post:', post.id)
+    post.is_checked = post._form.is_checked
     post._saved = true
     setTimeout(() => { post._saved = false }, 3000)
   }
