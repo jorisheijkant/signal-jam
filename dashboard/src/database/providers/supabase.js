@@ -44,6 +44,17 @@ async function getPosts(limit = 10, offset = 0) {
   return { data, error }
 }
 
+async function getCheckedPosts(limit = 10, offset = 0) {
+  const { data, error } = await client
+    .from('posts')
+    .select('*, account:accounts(*)')
+    .eq('is_checked', true)
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error }
+}
+
 async function getMostActiveAccounts(limit = 6) {
   const { data, error } = await client
     .from('posts')
@@ -67,8 +78,30 @@ async function getMostActiveAccounts(limit = 6) {
   return { data: result, error: null }
 }
 
+async function updatePost(id, fields) {
+  const { data, error } = await client
+    .from('posts')
+    .update(fields)
+    .eq('id', id)
+    .select()
+
+  return { data, error }
+}
+
+async function deletePost(id) {
+  const { error } = await client
+    .from('posts')
+    .delete()
+    .eq('id', id)
+
+  return { error }
+}
+
 export default {
   getPosts,
+  getCheckedPosts,
   getPostsPerDay,
   getMostActiveAccounts,
+  updatePost,
+  deletePost,
 }

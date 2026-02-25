@@ -38,6 +38,7 @@ CREATE TABLE posts (
 
     is_checked BOOLEAN DEFAULT FALSE,
     contains_misinformation BOOLEAN,
+    notes TEXT,
 
     platform_data JSONB,
 

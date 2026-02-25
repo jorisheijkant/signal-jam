@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts } from '../database'
+import { getCheckedPosts } from '../database'
 import TwitterEmbed from './embeds/TwitterEmbed.vue'
 import TiktokEmbed from './embeds/TiktokEmbed.vue'
 import FacebookEmbed from './embeds/FacebookEmbed.vue'
@@ -30,7 +30,7 @@ const posts = ref([])
 const hasMore = ref(true)
 
 async function loadMore() {
-  const { data, error } = await getPosts(PAGE_SIZE, posts.value.length)
+  const { data, error } = await getCheckedPosts(PAGE_SIZE, posts.value.length)
   if (error) {
     console.error('Failed to fetch posts:', error)
     return

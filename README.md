@@ -4,29 +4,27 @@ This _monorepo_ hosts the software suite of the _Signal Jam_ project. With this 
 ## Provider agnostic
 The software suite is tailored for use with cloud providers for ease of use, but is built as _provider agnostic_ as possible. This means that you can decide on yourself what to use for each part of the application.
 
-N.B. This application is in a very early development stage. So don't take the list below too seriously yet.
-
 #### The database
 - Supabase (recommended) 
-- Neon
-- Railway 
-- Any local postgres instance
+- Neon (not yet implemented)
+- Railway (not yet implemented)
+- Any local postgres instance (DIY)
 
 #### Script deployment
-- Railway 
-- Render
-- Fly.io 
+- Railway (not yet implemented)
+- Render (not yet implemented)
+- Fly.io (not yet implemented)
 - With a cronjob on a local VPS (check possible additional setup requirements)
 
 #### Dashboard deployment 
 - Netlify (recommended)
-- Vercel 
-- Cloudflare pages 
+- Vercel (not yet implemented)
+- Cloudflare pages (not yet implemented)
 
 #### Authentication
 - Supabase Auth (recommended)
-- Auth0 
-- Clerk
+- Auth0 (not yet implemented)
+- Clerk (not yet implemented)
 
 ## Architecture
 ```
