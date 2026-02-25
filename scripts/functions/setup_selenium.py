@@ -51,6 +51,7 @@ def setup_selenium():
     local_profile_directory = copy_profile_to_local_folder(firefox_profile_directory)
 
     firefox_options = Options()
+    firefox_options.add_argument("-headless")
     firefox_profile = webdriver.FirefoxProfile(str(local_profile_directory))
     firefox_profile.set_preference("security.fileuri.strict_origin_policy", False)
     firefox_profile.update_preferences()

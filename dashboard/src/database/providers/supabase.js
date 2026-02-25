@@ -38,6 +38,7 @@ async function getPosts(limit = 10, offset = 0) {
   const { data, error } = await client
     .from('posts')
     .select('*, account:accounts(*)')
+    .order('is_checked', { ascending: true })
     .order('posted_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
