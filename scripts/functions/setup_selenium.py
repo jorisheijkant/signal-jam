@@ -7,11 +7,13 @@ from selenium import webdriver
 import os
 import time
 import shutil
-from datetime import datetime
 from os.path import expanduser
 from glob import glob
 from platform import system
 from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
+SCRAPING_TOOLS_DIR = BASE_DIR / 'scraping_tools'
 
 def get_profile():
     profile_glob = {
@@ -28,8 +30,8 @@ def get_profile():
         print("Multiple profiles found:")
         profiles = sorted(profiles, key=lambda d: os.stat(d).st_mtime, reverse=True)
         for profile in profiles:
-            mtime = datetime.fromtimestamp(os.stat(profile).st_mtime)
-            print(f"- ({mtime.strftime('%Y-%m-%d %H:%M:%S')}) {profile}")
+            mtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(os.stat(profile).st_mtime))
+            print(f"- ({mtime}) {profile}")
 
         print("Choosing most recently used one (first in the list above)")
     else:
@@ -38,7 +40,7 @@ def get_profile():
     return profiles[0]
 
 def copy_profile_to_local_folder(profile_dir):
-    profile_file = Path(".").joinpath("scraping_tools/.temp-profile").resolve()
+    profile_file = SCRAPING_TOOLS_DIR / '.temp-profile'
     if profile_file.exists():
         print("Profile exists, overwriting the old one...")
         shutil.rmtree(profile_file)
@@ -57,13 +59,13 @@ def setup_selenium():
     firefox_profile.update_preferences()
     firefox_options.profile = firefox_profile
 
-    firefox_service = Service("scraping_tools/geckodriver") # Make sure you downloaded the binary to this folder
+    firefox_service = Service(SCRAPING_TOOLS_DIR / 'geckodriver') # Make sure you downloaded the binary to this folder
     driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
     print(f"Opened Firefox")
     
-    driver.install_addon("scraping_tools/zeeschuimer-v1.13.4.xpi", temporary=True) # Change this if using a different version
+    driver.install_addon(str(SCRAPING_TOOLS_DIR / 'zeeschuimer-v1.13.4.xpi'), temporary=True) # Change this if using a different version
 
-    driver.execute_script(open("scraping_tools/stealth.js").read())
+    driver.execute_script((SCRAPING_TOOLS_DIR / 'stealth.js').read_text())
     print(f"Succesfully installed Zeeschuimer and loaded the stealth script...")
 
     # TODO: Tweak these for my specific use case
