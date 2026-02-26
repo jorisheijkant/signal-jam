@@ -1,6 +1,9 @@
 <template>
   <main class="flex-grow">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6">Posts labelen</h2>
+    <div class="flex items-baseline gap-3 mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Posts labelen</h2>
+      <span v-if="unlabeledCount !== null" class="text-sm text-gray-500">{{ unlabeledCount }} nog te labelen</span>
+    </div>
     <div class="space-y-6">
       <div
         v-for="post in posts"
@@ -87,7 +90,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts, updatePost, deletePost } from '../database'
+import { getPosts, updatePost, deletePost, getUnlabeledCount } from '../database'
 import TwitterEmbed from '../components/embeds/TwitterEmbed.vue'
 import TiktokEmbed from '../components/embeds/TiktokEmbed.vue'
 import FacebookEmbed from '../components/embeds/FacebookEmbed.vue'
@@ -95,6 +98,7 @@ import FacebookEmbed from '../components/embeds/FacebookEmbed.vue'
 const PAGE_SIZE = 10
 const posts = ref([])
 const hasMore = ref(true)
+const unlabeledCount = ref(null)
 
 function addFormFields(post) {
   post._form = {
@@ -149,13 +153,21 @@ async function submitPost(post) {
   } else if (post._form.not_relevant) {
     console.log('[Labeling] Delete succeeded, removing post from list:', post.id)
     posts.value = posts.value.filter(p => p.id !== post.id)
+    if (unlabeledCount.value !== null) unlabeledCount.value--
   } else {
     console.log('[Labeling] Update succeeded for post:', post.id)
+    if (post._form.is_checked && !post.is_checked && unlabeledCount.value !== null) {
+      unlabeledCount.value--
+    }
     post.is_checked = post._form.is_checked
     post._saved = true
     setTimeout(() => { post._saved = false }, 3000)
   }
 }
 
-onMounted(loadMore)
+onMounted(async () => {
+  const { count } = await getUnlabeledCount()
+  unlabeledCount.value = count
+  loadMore()
+})
 </script>

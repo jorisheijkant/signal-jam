@@ -6,13 +6,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getLastScrapedAt } from '../database'
 
-const lastModified = ref(new Date().toLocaleString('nl-NL', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit'
-}))
+const lastModified = ref('Laden...')
+
+onMounted(async () => {
+  const { data, error } = await getLastScrapedAt()
+  if (error || !data) {
+    lastModified.value = 'Onbekend'
+    return
+  }
+  lastModified.value = new Date(data.scraped_at).toLocaleString('nl-NL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+})
 </script>

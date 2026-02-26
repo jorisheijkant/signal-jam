@@ -3,7 +3,9 @@
     <h1 class="text-4xl font-bold">🛰️ Signal Jam</h1>
     <nav class="flex items-center gap-4">
       <router-link to="/" class="text-sm text-amethyst-700 hover:text-amethyst-900">Dashboard</router-link>
-      <router-link to="/labelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Labelen</router-link>
+      <router-link to="/labelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">
+        Labelen<span v-if="unlabeledCount !== null"> ({{ unlabeledCount }})</span>
+      </router-link>
       <button
         @click="handleSignOut"
         class="px-4 py-2 text-sm border border-amethyst-600 text-amethyst-700 hover:bg-amethyst-100 transition-colors cursor-pointer"
@@ -15,7 +17,16 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { signOut } from '../auth'
+import { getUnlabeledCount } from '../database'
+
+const unlabeledCount = ref(null)
+
+onMounted(async () => {
+  const { count } = await getUnlabeledCount()
+  unlabeledCount.value = count
+})
 
 async function handleSignOut() {
   try {

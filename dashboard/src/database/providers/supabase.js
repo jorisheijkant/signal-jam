@@ -79,6 +79,24 @@ async function getMostActiveAccounts(limit = 6) {
   return { data: result, error: null }
 }
 
+async function getLastScrapedAt() {
+  const { data, error } = await client
+    .from('posts')
+    .select('scraped_at')
+    .order('scraped_at', { ascending: false })
+    .limit(1)
+    .single()
+  return { data, error }
+}
+
+async function getUnlabeledCount() {
+  const { count, error } = await client
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_checked', false)
+  return { count, error }
+}
+
 async function updatePost(id, fields) {
   console.log('[DB] updatePost →', { id, fields })
   const response = await client
@@ -122,6 +140,8 @@ export default {
   getCheckedPosts,
   getPostsPerDay,
   getMostActiveAccounts,
+  getUnlabeledCount,
+  getLastScrapedAt,
   updatePost,
   deletePost,
 }
