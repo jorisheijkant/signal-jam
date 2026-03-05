@@ -42,3 +42,13 @@ Auth and database access are abstracted behind provider modules:
 - **Database**: `src/database/index.js` — swap providers via `VITE_DB_PROVIDER`
 
 To add a new provider, implement the same interface as the existing Supabase provider and register it in the respective `index.js`.
+
+## Dashboard start date
+
+Older posts are kept in the database but excluded from the dashboard and labeling queue. The cutoff is set in `src/database/index.js`:
+
+```js
+const DASHBOARD_START_DATE = '2026-01-01'
+```
+
+Change this value to widen or narrow which posts are shown. The format is `YYYY-MM-DD`. This constant lives in `index.js` (not inside a provider) so it applies automatically to any database provider you add.

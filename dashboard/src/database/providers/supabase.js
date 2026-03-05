@@ -34,10 +34,12 @@ async function getPostsPerDay(days = 20) {
   return { data: result, error: null }
 }
 
-async function getPosts(limit = 10, offset = 0) {
-  const { data, error } = await client
+async function getPosts(limit = 10, offset = 0, startDate = null) {
+  let query = client
     .from('posts')
     .select('*, account:accounts(*)')
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
     .order('is_checked', { ascending: true })
     .order('posted_at', { ascending: false })
     .range(offset, offset + limit - 1)
@@ -45,10 +47,12 @@ async function getPosts(limit = 10, offset = 0) {
   return { data, error }
 }
 
-async function getCheckedPosts(limit = 10, offset = 0) {
-  const { data, error } = await client
+async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
+  let query = client
     .from('posts')
     .select('*, account:accounts(*)')
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
     .eq('is_checked', true)
     .order('posted_at', { ascending: false })
     .range(offset, offset + limit - 1)
@@ -56,10 +60,12 @@ async function getCheckedPosts(limit = 10, offset = 0) {
   return { data, error }
 }
 
-async function getMostActiveAccounts(limit = 6) {
-  const { data, error } = await client
+async function getMostActiveAccounts(limit = 6, startDate = null) {
+  let query = client
     .from('posts')
     .select('account_id, account:accounts(id, username, platform, account_url)')
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
 
   if (error) return { data: null, error }
 
@@ -89,10 +95,12 @@ async function getLastScrapedAt() {
   return { data, error }
 }
 
-async function getUnlabeledCount() {
-  const { count, error } = await client
+async function getUnlabeledCount(startDate = null) {
+  let query = client
     .from('posts')
     .select('*', { count: 'exact', head: true })
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { count, error } = await query
     .eq('is_checked', false)
   return { count, error }
 }

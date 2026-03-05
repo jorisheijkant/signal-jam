@@ -1,5 +1,7 @@
-import re 
+import re
 
-def name_to_slug(name): 
-    return re.sub(r"\s+", "+", name) 
+def name_to_slug(name):
+    slug = re.sub(r"\s+", "+", name)
+    slug = re.sub(r"[^\w+\-.]", "_", slug)
+    return slug
 
