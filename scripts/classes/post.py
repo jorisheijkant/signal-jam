@@ -12,6 +12,7 @@ class Post:
     content: Optional[str] = None
     post_type: str = 'original'
     parent_post_id: Optional[int] = None
+    parent_url: Optional[str] = None  # transient: resolved to parent_post_id before DB insert
     likes: int = 0
     reposts: int = 0
     comments: int = 0

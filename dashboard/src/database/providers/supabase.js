@@ -127,6 +127,21 @@ async function updatePost(id, fields) {
   return { data: response.data, error: response.error }
 }
 
+async function updateSiblingReposts(post, fields) {
+  // Determine the root post id: if this post is itself a repost, use its parent;
+  // if it's the original, use its own id.
+  const rootId = post.parent_post_id ?? post.id
+
+  const { data, error } = await client
+    .from('posts')
+    .update(fields)
+    .eq('parent_post_id', rootId)
+    .neq('id', post.id)
+    .select('id')
+
+  return { data, error }
+}
+
 async function deletePost(id) {
   console.log('[DB] deletePost →', { id })
   const response = await client
@@ -149,6 +164,32 @@ async function getFrames() {
     .select('*')
     .order('name', { ascending: true })
   return { data, error }
+}
+
+async function getActiveFrames(days = 30) {
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const { data, error } = await client
+    .from('posts')
+    .select('frame_id, frame:frames(id, name)')
+    .not('frame_id', 'is', null)
+    .eq('is_checked', true)
+    .gte('posted_at', since.toISOString())
+
+  if (error) return { data: null, error }
+
+  const counts = {}
+  for (const post of data) {
+    const id = post.frame_id
+    if (!counts[id]) {
+      counts[id] = { id, name: post.frame.name, count: 0 }
+    }
+    counts[id].count++
+  }
+
+  const result = Object.values(counts).sort((a, b) => b.count - a.count)
+  return { data: result, error: null }
 }
 
 async function createFrame(name, description = '') {
@@ -176,8 +217,10 @@ export default {
   getUnlabeledCount,
   getLastScrapedAt,
   updatePost,
+  updateSiblingReposts,
   deletePost,
   getFrames,
   createFrame,
   deleteFrame,
+  getActiveFrames,
 }

@@ -41,10 +41,27 @@ def ndjson_to_tweets(ndjson_path):
                 in_reply_to = legacy_data.get('in_reply_to_screen_name')
                 is_retweet = 'retweeted_status_result' in legacy_data
 
+                parent_url = None
                 if is_retweet:
                     post_type = 'repost'
+                    rt_result = (legacy_data
+                                 .get('retweeted_status_result', {})
+                                 .get('result', {}))
+                    rt_legacy = rt_result.get('legacy', {})
+                    rt_id = rt_result.get('rest_id')
+                    rt_handle = (rt_result
+                                 .get('core', {})
+                                 .get('user_results', {})
+                                 .get('result', {})
+                                 .get('core', {})
+                                 .get('screen_name'))
+                    if rt_id and rt_handle:
+                        parent_url = f"https://x.com/{rt_handle}/status/{rt_id}"
                 elif in_reply_to:
                     post_type = 'reply'
+                    reply_to_id = legacy_data.get('in_reply_to_status_id_str')
+                    if reply_to_id and in_reply_to:
+                        parent_url = f"https://x.com/{in_reply_to}/status/{reply_to_id}"
                 else:
                     post_type = 'original'
 
@@ -61,6 +78,7 @@ def ndjson_to_tweets(ndjson_path):
                     url=f"https://x.com/{handle}/status/{tweet_id}",
                     content=legacy_data.get('full_text') or legacy_data.get('text'),
                     post_type=post_type,
+                    parent_url=parent_url,
                     likes=legacy_data.get('favorite_count', 0),
                     reposts=legacy_data.get('retweet_count', 0),
                     comments=legacy_data.get('reply_count', 0),

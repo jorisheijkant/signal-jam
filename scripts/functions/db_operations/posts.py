@@ -20,6 +20,17 @@ def has_post_today(conn, platform: str, username: str) -> bool:
         return cur.fetchone()[0]
 
 
+def get_post_id_by_url(conn, platform: str, url: str) -> int | None:
+    """Return the DB id of a post by its platform + URL, or None if not found."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id FROM posts WHERE platform = %s AND url = %s",
+            (platform, url),
+        )
+        row = cur.fetchone()
+        return row[0] if row else None
+
+
 def insert_post(conn, post: Post) -> int:
     """Insert a post, skipping on (platform, url) conflict. Returns the post id."""
     platform_data = json.dumps(post.platform_data) if post.platform_data else None

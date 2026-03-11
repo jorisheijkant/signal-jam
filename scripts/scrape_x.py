@@ -10,7 +10,7 @@ from functions.setup_selenium import setup_selenium
 from functions.x.scrape_term import scrape_term
 from functions.x.scrape_x_profile import scrape_x_profile
 from functions.x.ndjson_to_tweets import ndjson_to_tweets
-from functions.db_operations import upsert_account, insert_post, has_post_today
+from functions.db_operations import upsert_account, insert_post, has_post_today, get_post_id_by_url
 
 x_term_search_url_base = "https://x.com/search?q="
 x_term_search_url_affix = "%20lang%3Anl&src=typed_query"
@@ -43,6 +43,14 @@ def ndjson_to_db(ndjson_path, filter_terms=None):
 
             account_id = upsert_account(db.conn, account)
             post.account_id = account_id
+
+            if post.parent_url and post.parent_post_id is None:
+                post.parent_post_id = get_post_id_by_url(db.conn, post.platform, post.parent_url)
+                if post.parent_post_id:
+                    print(f"  [parent resolved] {post.parent_url} → id {post.parent_post_id}")
+                else:
+                    print(f"  [parent not found] {post.parent_url} (not yet in DB)")
+
             post_id = insert_post(db.conn, post)
             status = 'inserted' if post_id else 'already exists'
             print(f"  [{status}] {account.username} — {post.url}")

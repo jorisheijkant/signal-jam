@@ -19,6 +19,24 @@
           </span>
         </div>
 
+        <div class="flex items-center gap-2 mb-3 flex-wrap">
+          <span class="text-sm font-medium text-gray-800">
+            {{ post.account?.display_name || post.account?.username || 'Onbekend' }}
+          </span>
+          <span class="text-xs text-gray-400">@{{ post.account?.username }}</span>
+          <span class="text-xs text-gray-400">·</span>
+          <span class="text-xs text-gray-400">{{ formatDate(post.posted_at) }}</span>
+          <span v-if="post.post_type === 'repost'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
+            ↻ repost
+          </span>
+          <span v-else-if="post.post_type === 'quote'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
+            ❝ quote
+          </span>
+          <span v-else-if="post.post_type === 'reply'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
+            ↩ reply
+          </span>
+        </div>
+
         <div class="post-embed mb-4">
           <TwitterEmbed v-if="post.platform === 'twitter'" :url="post.url" />
           <TiktokEmbed v-else-if="post.platform === 'tiktok'" :url="post.url" />
@@ -103,10 +121,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts, updatePost, deletePost, getUnlabeledCount, getFrames } from '../database'
+import { getPosts, updatePost, updateSiblingReposts, deletePost, getUnlabeledCount, getFrames } from '../database'
 import TwitterEmbed from '../components/embeds/TwitterEmbed.vue'
 import TiktokEmbed from '../components/embeds/TiktokEmbed.vue'
 import FacebookEmbed from '../components/embeds/FacebookEmbed.vue'
+
+function formatDate(ts) {
+  if (!ts) return ''
+  const d = new Date(ts)
+  return d.toLocaleString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
 const PAGE_SIZE = 10
 const posts = ref([])
@@ -160,6 +184,15 @@ async function submitPost(post) {
     }
     console.log('[Labeling] Action: update post', post.id, 'with', fields)
     ;({ error } = await updatePost(post.id, fields))
+
+    if (!error && (post.parent_post_id || post.post_type === 'original')) {
+      const { data: siblings, error: siblingError } = await updateSiblingReposts(post, fields)
+      if (siblingError) {
+        console.warn('[Labeling] Failed to update sibling reposts:', siblingError)
+      } else if (siblings?.length) {
+        console.log(`[Labeling] Propagated labels to ${siblings.length} sibling repost(s):`, siblings.map(s => s.id))
+      }
+    }
   }
 
   post._saving = false
