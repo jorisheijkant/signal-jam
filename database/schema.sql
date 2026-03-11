@@ -45,8 +45,20 @@ CREATE TABLE posts (
     UNIQUE(platform, url)
 );
 
+-- Frames table (central misinformation themes)
+CREATE TABLE frames (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add frame reference to posts
+ALTER TABLE posts ADD COLUMN frame_id INTEGER REFERENCES frames(id) ON DELETE SET NULL;
+
 -- Indexes
 CREATE INDEX idx_posts_platform ON posts(platform);
+CREATE INDEX idx_posts_frame_id ON posts(frame_id);
 CREATE INDEX idx_posts_posted_at ON posts(posted_at);
 CREATE INDEX idx_posts_account_id ON posts(account_id);
 CREATE INDEX idx_posts_post_type ON posts(post_type);

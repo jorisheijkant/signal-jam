@@ -54,6 +54,19 @@
           </label>
 
           <label class="flex flex-col gap-1 text-sm text-gray-700">
+            Frame
+            <select
+              v-model="post._form.frame_id"
+              class="border border-gray-300 rounded-md p-2 text-sm"
+            >
+              <option :value="null">— Geen frame —</option>
+              <option v-for="frame in frames" :key="frame.id" :value="frame.id">
+                {{ frame.name }}
+              </option>
+            </select>
+          </label>
+
+          <label class="flex flex-col gap-1 text-sm text-gray-700">
             Notities
             <textarea
               v-model="post._form.notes"
@@ -90,13 +103,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts, updatePost, deletePost, getUnlabeledCount } from '../database'
+import { getPosts, updatePost, deletePost, getUnlabeledCount, getFrames } from '../database'
 import TwitterEmbed from '../components/embeds/TwitterEmbed.vue'
 import TiktokEmbed from '../components/embeds/TiktokEmbed.vue'
 import FacebookEmbed from '../components/embeds/FacebookEmbed.vue'
 
 const PAGE_SIZE = 10
 const posts = ref([])
+const frames = ref([])
 const hasMore = ref(true)
 const unlabeledCount = ref(null)
 
@@ -105,6 +119,7 @@ function addFormFields(post) {
     not_relevant: false,
     is_checked: post.is_checked || false,
     contains_misinformation: post.contains_misinformation || false,
+    frame_id: post.frame_id || null,
     notes: post.notes || '',
   }
   post._saving = false
@@ -140,6 +155,7 @@ async function submitPost(post) {
     const fields = {
       is_checked: post._form.is_checked,
       contains_misinformation: post._form.contains_misinformation,
+      frame_id: post._form.frame_id,
       notes: post._form.notes,
     }
     console.log('[Labeling] Action: update post', post.id, 'with', fields)
@@ -166,8 +182,12 @@ async function submitPost(post) {
 }
 
 onMounted(async () => {
-  const { count } = await getUnlabeledCount()
+  const [{ count }, { data: frameData }] = await Promise.all([
+    getUnlabeledCount(),
+    getFrames(),
+  ])
   unlabeledCount.value = count
+  frames.value = frameData || []
   loadMore()
 })
 </script>

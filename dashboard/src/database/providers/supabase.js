@@ -143,6 +143,31 @@ async function deletePost(id) {
   return { error: response.error }
 }
 
+async function getFrames() {
+  const { data, error } = await client
+    .from('frames')
+    .select('*')
+    .order('name', { ascending: true })
+  return { data, error }
+}
+
+async function createFrame(name, description = '') {
+  const { data, error } = await client
+    .from('frames')
+    .insert({ name, description })
+    .select()
+    .single()
+  return { data, error }
+}
+
+async function deleteFrame(id) {
+  const { error } = await client
+    .from('frames')
+    .delete()
+    .eq('id', id)
+  return { error }
+}
+
 export default {
   getPosts,
   getCheckedPosts,
@@ -152,4 +177,7 @@ export default {
   getLastScrapedAt,
   updatePost,
   deletePost,
+  getFrames,
+  createFrame,
+  deleteFrame,
 }
