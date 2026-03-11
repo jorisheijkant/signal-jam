@@ -56,6 +56,16 @@ CREATE TABLE frames (
 -- Add frame reference to posts
 ALTER TABLE posts ADD COLUMN frame_id INTEGER REFERENCES frames(id) ON DELETE SET NULL;
 
+-- Weekly summaries table
+CREATE TABLE summaries (
+    id SERIAL PRIMARY KEY,
+    week_start DATE NOT NULL UNIQUE,  -- always a Monday
+    week_end DATE NOT NULL,           -- always the Sunday of that same week
+    content TEXT NOT NULL,
+    llm_provider VARCHAR(50),
+    generated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX idx_posts_platform ON posts(platform);
 CREATE INDEX idx_posts_frame_id ON posts(frame_id);

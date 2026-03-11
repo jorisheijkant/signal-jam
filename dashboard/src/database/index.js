@@ -26,6 +26,7 @@ export const getLastScrapedAt = db.getLastScrapedAt
 export const updatePost = db.updatePost
 export const updateSiblingReposts = db.updateSiblingReposts
 export const deletePost = db.deletePost
+export const getSummaries = db.getSummaries
 export const getFrames = db.getFrames
 export const createFrame = db.createFrame
 export const deleteFrame = db.deleteFrame

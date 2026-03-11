@@ -158,6 +158,14 @@ async function deletePost(id) {
   return { error: response.error }
 }
 
+async function getSummaries() {
+  const { data, error } = await client
+    .from('summaries')
+    .select('*')
+    .order('week_start', { ascending: false })
+  return { data, error }
+}
+
 async function getFrames() {
   const { data, error } = await client
     .from('frames')
@@ -219,6 +227,7 @@ export default {
   updatePost,
   updateSiblingReposts,
   deletePost,
+  getSummaries,
   getFrames,
   createFrame,
   deleteFrame,
