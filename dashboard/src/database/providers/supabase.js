@@ -89,6 +89,14 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   return { data: result, error: null }
 }
 
+async function getPostCounts() {
+  const [{ count: total, error: e1 }, { count: misinfo, error: e2 }] = await Promise.all([
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true),
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true).eq('contains_misinformation', true),
+  ])
+  return { total, misinfo, error: e1 || e2 }
+}
+
 async function getLastScrapedAt() {
   const { data, error } = await client
     .from('posts')
@@ -215,6 +223,16 @@ async function createFrame(name, description = '') {
   return { data, error }
 }
 
+async function updateFrame(id, fields) {
+  const { data, error } = await client
+    .from('frames')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data, error }
+}
+
 async function deleteFrame(id) {
   const { error } = await client
     .from('frames')
@@ -224,6 +242,7 @@ async function deleteFrame(id) {
 }
 
 export default {
+  getPostCounts,
   getPosts,
   getCheckedPosts,
   getPostsPerDay,
@@ -236,6 +255,7 @@ export default {
   getSummaries,
   getFrames,
   createFrame,
+  updateFrame,
   deleteFrame,
   getActiveFrames,
 }

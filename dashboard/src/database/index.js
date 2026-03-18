@@ -21,6 +21,7 @@ export const getPosts = (limit, offset) => db.getPosts(limit, offset, DASHBOARD_
 export const getCheckedPosts = (limit, offset) => db.getCheckedPosts(limit, offset, DASHBOARD_START_DATE)
 export const getMostActiveAccounts = (limit) => db.getMostActiveAccounts(limit, DASHBOARD_START_DATE)
 export const getUnlabeledCount = () => db.getUnlabeledCount(DASHBOARD_START_DATE)
+export const getPostCounts = db.getPostCounts
 export const getPostsPerDay = db.getPostsPerDay
 export const getLastScrapedAt = db.getLastScrapedAt
 export const updatePost = db.updatePost
@@ -29,6 +30,7 @@ export const deletePost = db.deletePost
 export const getSummaries = db.getSummaries
 export const getFrames = db.getFrames
 export const createFrame = db.createFrame
+export const updateFrame = db.updateFrame
 export const deleteFrame = db.deleteFrame
 export const getActiveFrames = db.getActiveFrames
 
