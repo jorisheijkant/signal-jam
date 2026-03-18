@@ -50,7 +50,7 @@
               v-model="post._form.not_relevant"
               class="accent-red-600"
             />
-            Is niet relevant (wordt verwijderd)
+            Is niet relevant
           </label>
 
           <label class="flex items-center gap-2 text-sm text-gray-700">
