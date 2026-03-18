@@ -66,7 +66,7 @@ async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
 async function getMostActiveAccounts(limit = 6, startDate = null) {
   let query = client
     .from('posts')
-    .select('account_id, account:accounts(id, username, platform, account_url)')
+    .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
     .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
@@ -77,13 +77,15 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   for (const post of data) {
     const id = post.account_id
     if (!counts[id]) {
-      counts[id] = { ...post.account, postCount: 0 }
+      counts[id] = { ...post.account, misinfoCount: 0, totalCount: 0 }
     }
-    counts[id].postCount++
+    counts[id].totalCount++
+    if (post.contains_misinformation) counts[id].misinfoCount++
   }
 
   const result = Object.values(counts)
-    .sort((a, b) => b.postCount - a.postCount)
+    .sort((a, b) => b.misinfoCount - a.misinfoCount)
+    .filter(a => a.misinfoCount > 0)
     .slice(0, limit)
 
   return { data: result, error: null }
