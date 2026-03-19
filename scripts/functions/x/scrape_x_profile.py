@@ -1,14 +1,18 @@
 import re
 import time
 import os
+from pathlib import Path
 
 from functions.utils.name_to_slug import name_to_slug
 from functions.utils.copy_last_ndjson import copy_last_ndjson
 from functions.utils.scroll_to_end import scroll_to_end
 
+SCRIPTS_DIR = Path(__file__).parent.parent.parent
+DATA_DIR = SCRIPTS_DIR.parent / "data"
+
 def scrape_x_profile(driver, profile_url, name):
     name_folder_friendly = name_to_slug(name)
-    output_folder = f"data/{name_folder_friendly}"
+    output_folder = DATA_DIR / name_folder_friendly
     os.makedirs(output_folder, exist_ok=True)
 
     handles = driver.window_handles

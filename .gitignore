@@ -22,3 +22,7 @@ Desktop.ini
 *.tmp
 *.temp
 .cache/
+
+data/
+data/**/* 
+!data/.gitkeep
