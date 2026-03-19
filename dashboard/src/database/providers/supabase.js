@@ -12,6 +12,7 @@ async function getPostsPerDay(days = 20) {
   const { data, error } = await client
     .from('posts')
     .select('posted_at')
+    .eq('is_relevant', true)
     .gte('posted_at', since.toISOString())
     .order('posted_at', { ascending: true })
 
@@ -38,6 +39,7 @@ async function getPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*)')
+    .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
     .order('is_checked', { ascending: true })
@@ -51,6 +53,7 @@ async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*)')
+    .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
     .eq('is_checked', true)
@@ -63,7 +66,8 @@ async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
 async function getMostActiveAccounts(limit = 6, startDate = null) {
   let query = client
     .from('posts')
-    .select('account_id, account:accounts(id, username, platform, account_url)')
+    .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
+    .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
 
@@ -73,16 +77,26 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   for (const post of data) {
     const id = post.account_id
     if (!counts[id]) {
-      counts[id] = { ...post.account, postCount: 0 }
+      counts[id] = { ...post.account, misinfoCount: 0, totalCount: 0 }
     }
-    counts[id].postCount++
+    counts[id].totalCount++
+    if (post.contains_misinformation) counts[id].misinfoCount++
   }
 
   const result = Object.values(counts)
-    .sort((a, b) => b.postCount - a.postCount)
+    .sort((a, b) => b.misinfoCount - a.misinfoCount)
+    .filter(a => a.misinfoCount > 0)
     .slice(0, limit)
 
   return { data: result, error: null }
+}
+
+async function getPostCounts() {
+  const [{ count: total, error: e1 }, { count: misinfo, error: e2 }] = await Promise.all([
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true),
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true).eq('contains_misinformation', true),
+  ])
+  return { total, misinfo, error: e1 || e2 }
 }
 
 async function getLastScrapedAt() {
@@ -99,6 +113,7 @@ async function getUnlabeledCount(startDate = null) {
   let query = client
     .from('posts')
     .select('*', { count: 'exact', head: true })
+    .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { count, error } = await query
     .eq('is_checked', false)
@@ -143,13 +158,13 @@ async function updateSiblingReposts(post, fields) {
 }
 
 async function deletePost(id) {
-  console.log('[DB] deletePost →', { id })
+  console.log('[DB] markPostIrrelevant →', { id })
   const response = await client
     .from('posts')
-    .delete()
+    .update({ is_relevant: false, is_checked: true })
     .eq('id', id)
 
-  console.log('[DB] deletePost ←', {
+  console.log('[DB] markPostIrrelevant ←', {
     status: response.status,
     statusText: response.statusText,
     error: response.error,
@@ -182,6 +197,7 @@ async function getActiveFrames(days = 30) {
     .from('posts')
     .select('frame_id, frame:frames(id, name)')
     .not('frame_id', 'is', null)
+    .eq('is_relevant', true)
     .eq('is_checked', true)
     .gte('posted_at', since.toISOString())
 
@@ -209,6 +225,16 @@ async function createFrame(name, description = '') {
   return { data, error }
 }
 
+async function updateFrame(id, fields) {
+  const { data, error } = await client
+    .from('frames')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data, error }
+}
+
 async function deleteFrame(id) {
   const { error } = await client
     .from('frames')
@@ -218,6 +244,7 @@ async function deleteFrame(id) {
 }
 
 export default {
+  getPostCounts,
   getPosts,
   getCheckedPosts,
   getPostsPerDay,
@@ -230,6 +257,7 @@ export default {
   getSummaries,
   getFrames,
   createFrame,
+  updateFrame,
   deleteFrame,
   getActiveFrames,
 }

@@ -37,6 +37,7 @@ CREATE TABLE posts (
     comments INTEGER DEFAULT 0,
 
     is_checked BOOLEAN DEFAULT FALSE,
+    is_relevant BOOLEAN DEFAULT TRUE,
     contains_misinformation BOOLEAN,
     notes TEXT,
 
@@ -73,4 +74,5 @@ CREATE INDEX idx_posts_posted_at ON posts(posted_at);
 CREATE INDEX idx_posts_account_id ON posts(account_id);
 CREATE INDEX idx_posts_post_type ON posts(post_type);
 CREATE INDEX idx_posts_is_checked ON posts(is_checked);
+CREATE INDEX idx_posts_is_relevant ON posts(is_relevant);
 CREATE INDEX idx_accounts_platform ON accounts(platform);
