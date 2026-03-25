@@ -243,6 +243,23 @@ async function deleteFrame(id) {
   return { error }
 }
 
+async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null) {
+  let query = client
+    .from('posts')
+    .select('*, account:accounts(*), frame:frames(id, name)')
+    .eq('is_relevant', true)
+
+  if (term) query = query.ilike('content', `%${term}%`)
+  if (frameId) query = query.eq('frame_id', frameId)
+  if (startDate) query = query.gte('posted_at', startDate)
+
+  const { data, error, count } = await query
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error, count }
+}
+
 export default {
   getPostCounts,
   getPosts,
@@ -260,4 +277,5 @@ export default {
   updateFrame,
   deleteFrame,
   getActiveFrames,
+  searchPosts,
 }
