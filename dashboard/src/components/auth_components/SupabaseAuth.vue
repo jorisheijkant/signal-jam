@@ -22,7 +22,7 @@ const handleLogin = async () => {
 
 <template>
   <form @submit.prevent="handleLogin">
-    <p class="text-gray-600 mb-4">Sign in via magic link with your email below</p>
+    <p class="text-gray-600 mb-4">Log in via een link in je mailbox. Let op: je moet een geregistreerd gebruiker zijn om in te kunnen loggen.</p>
     <div class="mb-4">
       <input
         class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amethyst-500 focus:border-transparent"

@@ -72,7 +72,7 @@
           <FacebookEmbed v-else-if="post.platform === 'facebook'" :url="post.url" />
         </div>
 
-        <div class="flex flex-col gap-3">
+        <div v-if="session" class="flex flex-col gap-3">
           <label class="flex items-center gap-2 text-sm text-red-600">
             <input
               type="checkbox"
@@ -152,6 +152,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { searchPosts, getFrames, updatePost, updateSiblingReposts, deletePost } from '../database'
+import { session } from '../auth'
 import TwitterEmbed from '../components/embeds/TwitterEmbed.vue'
 import TiktokEmbed from '../components/embeds/TiktokEmbed.vue'
 import FacebookEmbed from '../components/embeds/FacebookEmbed.vue'
