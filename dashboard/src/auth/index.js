@@ -1,10 +1,16 @@
 import supabaseAuth from './providers/supabase.js'
+import auth0Auth from './providers/auth0.js'
+import clerkAuth from './providers/clerk.js'
+import keycloakAuth from './providers/keycloak.js'
 
 // Configure which auth provider to use
 const AUTH_PROVIDER = import.meta.env.VITE_AUTH_PROVIDER || 'supabase'
 
 const providers = {
   supabase: supabaseAuth,
+  auth0: auth0Auth,
+  clerk: clerkAuth,
+  keycloak: keycloakAuth,
 }
 
 const auth = providers[AUTH_PROVIDER]

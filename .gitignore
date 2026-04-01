@@ -24,5 +24,9 @@ Desktop.ini
 .cache/
 
 data/
-data/**/* 
+data/**/*
 !data/.gitkeep
+
+database/backups/
+database/backups/**/*
+!database/backups/.gitkeep

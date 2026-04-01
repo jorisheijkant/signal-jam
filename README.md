@@ -22,9 +22,10 @@ The software suite is tailored for use with cloud providers for ease of use, but
 - Cloudflare pages (not yet implemented)
 
 #### Authentication
-- Supabase Auth (recommended)
-- Auth0 (not yet implemented)
-- Clerk (not yet implemented)
+- Supabase Auth (recommended, tested in production).
+- Auth0 (implemented, not yet tested).
+- Clerk (implemented, not yet tested).
+- Keycloak. This is the self-hosted, open source option (implemented, not yet tested).
 
 ## Architecture
 ```
