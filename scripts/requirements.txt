@@ -1,2 +1,3 @@
-urllib
 python-dotenv
+selenium
+psycopg2-binary

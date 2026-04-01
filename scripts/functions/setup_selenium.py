@@ -16,6 +16,12 @@ BASE_DIR = Path(__file__).parent.parent
 SCRAPING_TOOLS_DIR = BASE_DIR / 'scraping_tools'
 
 def get_profile():
+    # Cloud deployment: point directly to a profile on a persistent volume
+    profile_path = os.getenv('FIREFOX_PROFILE_PATH')
+    if profile_path:
+        print(f"Using profile from FIREFOX_PROFILE_PATH: {profile_path}")
+        return profile_path
+
     profile_glob = {
         "Windows": "~/AppData/Roaming/Mozilla/Firefox/Profiles/*",
         "Darwin": "~/Library/Application Support/Firefox/Profiles/*",
@@ -40,6 +46,11 @@ def get_profile():
     return profiles[0]
 
 def copy_profile_to_local_folder(profile_dir):
+    # When FIREFOX_PROFILE_PATH is set the profile is already in a writable
+    # location on a persistent volume — no copy needed.
+    if os.getenv('FIREFOX_PROFILE_PATH'):
+        return Path(profile_dir)
+
     profile_file = SCRAPING_TOOLS_DIR / '.temp-profile'
     if profile_file.exists():
         print("Profile exists, overwriting the old one...")
@@ -59,7 +70,9 @@ def setup_selenium():
     firefox_profile.update_preferences()
     firefox_options.profile = firefox_profile
 
-    firefox_service = Service(SCRAPING_TOOLS_DIR / 'geckodriver') # Make sure you downloaded the binary to this folder
+    # Use system geckodriver if available (cloud/Docker), otherwise fall back to local binary
+    geckodriver_path = shutil.which('geckodriver') or str(SCRAPING_TOOLS_DIR / 'geckodriver')
+    firefox_service = Service(geckodriver_path)
     driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
     print(f"Opened Firefox")
     

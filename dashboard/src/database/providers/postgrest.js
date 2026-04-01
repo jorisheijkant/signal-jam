@@ -1,0 +1,260 @@
+import { PostgrestClient } from '@supabase/postgrest-js'
+
+const url = import.meta.env.VITE_POSTGREST_URL
+const anonKey = import.meta.env.VITE_POSTGREST_ANON_KEY
+
+const headers = anonKey ? { Authorization: `Bearer ${anonKey}` } : {}
+const client = new PostgrestClient(url, { headers })
+
+async function getPostsPerDay(days = 20) {
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const { data, error } = await client
+    .from('posts')
+    .select('posted_at')
+    .eq('is_relevant', true)
+    .gte('posted_at', since.toISOString())
+    .order('posted_at', { ascending: true })
+
+  if (error) return { data: null, error }
+
+  const counts = {}
+  for (const post of data) {
+    const day = post.posted_at.slice(0, 10)
+    counts[day] = (counts[day] || 0) + 1
+  }
+
+  const result = []
+  for (let i = days; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const key = d.toISOString().slice(0, 10)
+    result.push({ date: key, count: counts[key] || 0 })
+  }
+
+  return { data: result, error: null }
+}
+
+async function getPosts(limit = 10, offset = 0, startDate = null) {
+  let query = client
+    .from('posts')
+    .select('*, account:accounts(*)')
+    .eq('is_relevant', true)
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
+    .order('is_checked', { ascending: true })
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error }
+}
+
+async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
+  let query = client
+    .from('posts')
+    .select('*, account:accounts(*)')
+    .eq('is_relevant', true)
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
+    .eq('is_checked', true)
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error }
+}
+
+async function getMostActiveAccounts(limit = 6, startDate = null) {
+  let query = client
+    .from('posts')
+    .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
+    .eq('is_relevant', true)
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query
+
+  if (error) return { data: null, error }
+
+  const counts = {}
+  for (const post of data) {
+    const id = post.account_id
+    if (!counts[id]) {
+      counts[id] = { ...post.account, misinfoCount: 0, totalCount: 0 }
+    }
+    counts[id].totalCount++
+    if (post.contains_misinformation) counts[id].misinfoCount++
+  }
+
+  const result = Object.values(counts)
+    .sort((a, b) => b.misinfoCount - a.misinfoCount)
+    .filter(a => a.misinfoCount > 0)
+    .slice(0, limit)
+
+  return { data: result, error: null }
+}
+
+async function getPostCounts() {
+  const [{ count: total, error: e1 }, { count: misinfo, error: e2 }] = await Promise.all([
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true),
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true).eq('contains_misinformation', true),
+  ])
+  return { total, misinfo, error: e1 || e2 }
+}
+
+async function getLastScrapedAt() {
+  const { data, error } = await client
+    .from('posts')
+    .select('scraped_at')
+    .order('scraped_at', { ascending: false })
+    .limit(1)
+    .single()
+  return { data, error }
+}
+
+async function getUnlabeledCount(startDate = null) {
+  let query = client
+    .from('posts')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_relevant', true)
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { count, error } = await query.eq('is_checked', false)
+  return { count, error }
+}
+
+async function updatePost(id, fields) {
+  const response = await client
+    .from('posts')
+    .update(fields)
+    .eq('id', id)
+    .select()
+
+  return { data: response.data, error: response.error }
+}
+
+async function updateSiblingReposts(post, fields) {
+  const rootId = post.parent_post_id ?? post.id
+
+  const { data, error } = await client
+    .from('posts')
+    .update(fields)
+    .eq('parent_post_id', rootId)
+    .neq('id', post.id)
+    .select('id')
+
+  return { data, error }
+}
+
+async function deletePost(id) {
+  const response = await client
+    .from('posts')
+    .update({ is_relevant: false, is_checked: true })
+    .eq('id', id)
+
+  return { error: response.error }
+}
+
+async function getSummaries() {
+  const { data, error } = await client
+    .from('summaries')
+    .select('*')
+    .order('week_start', { ascending: false })
+  return { data, error }
+}
+
+async function getFrames() {
+  const { data, error } = await client
+    .from('frames')
+    .select('*')
+    .order('name', { ascending: true })
+  return { data, error }
+}
+
+async function getActiveFrames(days = 30) {
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const { data, error } = await client
+    .from('posts')
+    .select('frame_id, frame:frames(id, name)')
+    .not('frame_id', 'is', null)
+    .eq('is_relevant', true)
+    .eq('is_checked', true)
+    .gte('posted_at', since.toISOString())
+
+  if (error) return { data: null, error }
+
+  const counts = {}
+  for (const post of data) {
+    const id = post.frame_id
+    if (!counts[id]) {
+      counts[id] = { id, name: post.frame.name, count: 0 }
+    }
+    counts[id].count++
+  }
+
+  const result = Object.values(counts).sort((a, b) => b.count - a.count)
+  return { data: result, error: null }
+}
+
+async function createFrame(name, description = '') {
+  const { data, error } = await client
+    .from('frames')
+    .insert({ name, description })
+    .select()
+    .single()
+  return { data, error }
+}
+
+async function updateFrame(id, fields) {
+  const { data, error } = await client
+    .from('frames')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+  return { data, error }
+}
+
+async function deleteFrame(id) {
+  const { error } = await client
+    .from('frames')
+    .delete()
+    .eq('id', id)
+  return { error }
+}
+
+async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null) {
+  let query = client
+    .from('posts')
+    .select('*, account:accounts(*), frame:frames(id, name)')
+    .eq('is_relevant', true)
+
+  if (term) query = query.ilike('content', `%${term}%`)
+  if (frameId) query = query.eq('frame_id', frameId)
+  if (startDate) query = query.gte('posted_at', startDate)
+
+  const { data, error, count } = await query
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error, count }
+}
+
+export default {
+  getPostCounts,
+  getPosts,
+  getCheckedPosts,
+  getPostsPerDay,
+  getMostActiveAccounts,
+  getUnlabeledCount,
+  getLastScrapedAt,
+  updatePost,
+  updateSiblingReposts,
+  deletePost,
+  getSummaries,
+  getFrames,
+  createFrame,
+  updateFrame,
+  deleteFrame,
+  getActiveFrames,
+  searchPosts,
+}

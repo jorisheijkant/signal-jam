@@ -90,6 +90,35 @@ Stores all scraped posts across platforms.
    DATABASE_URL=postgresql://localhost:5432/signaljam
    ```
 
+### Neon, Railway, and local PostgreSQL — dashboard access via PostgREST
+
+The dashboard runs in the browser and can't connect to a raw PostgreSQL database directly. Supabase handles this transparently via its built-in [PostgREST](https://postgrest.org) layer. For all other providers you need to run PostgREST yourself and set `VITE_DB_PROVIDER=postgrest` in the dashboard.
+
+**Quick setup (Docker):**
+```bash
+docker run --rm -p 3000:3000 \
+  -e PGRST_DB_URI="postgresql://user:password@host:5432/database" \
+  -e PGRST_DB_SCHEMA="public" \
+  -e PGRST_DB_ANON_ROLE="anon" \
+  postgrest/postgrest
+```
+
+Then in `dashboard/.env`:
+```
+VITE_DB_PROVIDER=postgrest
+VITE_POSTGREST_URL=http://localhost:3000
+```
+
+For production, deploy PostgREST as a container alongside your database and set `VITE_POSTGREST_URL` to its public URL. If you want to restrict access, configure a JWT secret in PostgREST and set `VITE_POSTGREST_ANON_KEY` to a signed anon token.
+
+The `PGRST_DB_ANON_ROLE` must be a PostgreSQL role that has `SELECT` on the tables the dashboard reads, and `UPDATE`/`DELETE` on `posts` and `frames` for the labeling workflow. Create the role and grant permissions after running the schema:
+
+```sql
+CREATE ROLE anon NOLOGIN;
+GRANT SELECT ON accounts, posts, summaries, frames TO anon;
+GRANT UPDATE, DELETE ON posts, frames TO anon;
+```
+
 ## Notes
 
 - The `platform_data` JSONB column can store any platform-specific fields (e.g., video duration for TikTok, hashtags, media URLs)

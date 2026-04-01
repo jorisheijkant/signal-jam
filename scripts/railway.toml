@@ -1,0 +1,8 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "python scrape_x.py"
+# Set the cron schedule in the Railway dashboard under your service's Settings tab.
+# The script runs once per invocation — Railway handles the scheduling.

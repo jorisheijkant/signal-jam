@@ -1,0 +1,17 @@
+app = "signal-jam-scraper"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  FIREFOX_PROFILE_PATH = "/data/firefox-profile"
+
+# Persistent volume for the Firefox profile (created via `fly volumes create`)
+[[mounts]]
+  source = "firefox_profile"
+  destination = "/data"
+
+# Fly.io has no native cron scheduler. Trigger a run with:
+#   fly machines run signal-jam-scraper --region ams
+# You can automate this from a GitHub Action or an external cron job.

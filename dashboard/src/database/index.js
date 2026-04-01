@@ -1,4 +1,5 @@
 import supabaseDb from './providers/supabase.js'
+import postgrestDb from './providers/postgrest.js'
 
 // Configure which database provider to use
 const DB_PROVIDER = import.meta.env.VITE_DB_PROVIDER || 'supabase'
@@ -9,6 +10,7 @@ const DASHBOARD_START_DATE = '2026-01-01'
 
 const providers = {
   supabase: supabaseDb,
+  postgrest: postgrestDb,
 }
 
 const db = providers[DB_PROVIDER]
