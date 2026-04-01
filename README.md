@@ -14,12 +14,13 @@ The software suite is tailored for use with cloud providers for ease of use, but
 - Railway (not yet implemented)
 - Render (not yet implemented)
 - Fly.io (not yet implemented)
-- With a cronjob on a local VPS (check possible additional setup requirements)
+- With a cronjob on a local VPS or a local machine (check possible additional setup requirements)
 
 #### Dashboard deployment 
-- Netlify (recommended)
-- Vercel (not yet implemented)
-- Cloudflare pages (not yet implemented)
+- Netlify (recommended, tested in production).
+- Vercel (not yet implemented).
+- Cloudflare pages (not yet implemented).
+- Locally generated dist folder copied to a server (DIY solution).
 
 #### Authentication
 - Supabase Auth (recommended, tested in production).
@@ -27,11 +28,11 @@ The software suite is tailored for use with cloud providers for ease of use, but
 - Clerk (implemented, not yet tested).
 - Keycloak. This is the self-hosted, open source option (implemented, not yet tested).
 
-## Architecture
+## Default architecture
 ```
 ┌─────────────┐      ┌──────────────┐      ┌───────────┐
 │  Scraper    │─────▶│  PostgreSQL  │◀─────│ Dashboard │
-│ (Railway)   │      │  (Supabase)  │      │ (Netlify) │
+│ (cronjob)   │      │  (Supabase)  │      │ (Netlify) │
 └─────────────┘      └──────────────┘      └───────────┘
                             ▲
                             │

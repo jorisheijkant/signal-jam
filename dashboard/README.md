@@ -28,11 +28,55 @@ For your database of choice, make sure you use the correct RLS-policies. Updatin
 ### Authentication
 Make sure to install your authentication method of choice before running the app. By default it uses Supabase Auth, with a magic link workflow. 
 
-## Deployment (Netlify)
+## Deployment
+
+SPA routing requires every URL to serve `index.html` — the configs below handle this for each platform.
+
+### Netlify
+
+Zero config beyond connecting the repo. The `public/_redirects` file handles SPA routing automatically.
 
 1. Connect your repository to Netlify.
 2. Set the build command to `yarn build` and the publish directory to `dist`.
-3. Add all environment variables from `.env.example` under _Site settings → Environment variables_, using your production Supabase credentials and setting `VITE_AUTH_REDIRECT_URL` to your Netlify domain.
+3. Add all environment variables from `.env.example` under _Site settings → Environment variables_, setting `VITE_AUTH_REDIRECT_URL` to your Netlify domain.
+
+### Vercel
+
+Zero config — Vercel auto-detects Vite. The `vercel.json` in this folder handles SPA routing.
+
+1. Import your repository in Vercel and set the root directory to `dashboard`.
+2. Add all environment variables from `.env.example` under _Project settings → Environment variables_, setting `VITE_AUTH_REDIRECT_URL` to your Vercel domain.
+
+### Cloudflare Pages
+
+The same `public/_redirects` file used by Netlify also works on Cloudflare Pages.
+
+1. Connect your repository in Cloudflare Pages.
+2. Set the build command to `yarn build`, the build output directory to `dist`, and the root directory to `dashboard`.
+3. Add all environment variables under _Settings → Environment variables_, setting `VITE_AUTH_REDIRECT_URL` to your Cloudflare Pages domain.
+
+### DIY (copy dist to a server)
+
+Run `yarn build` locally and copy the `dist/` folder to your server. Configure your web server to serve `index.html` for all routes:
+
+**nginx**
+```nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+**Apache** (`.htaccess`)
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+```
 
 ## Provider agnostic layer
 
