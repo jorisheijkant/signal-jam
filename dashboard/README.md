@@ -26,7 +26,7 @@ See `.env.example` for the full list. Key variables:
 | `VITE_APP_TITLE` | Yes | App name — used in page `<title>` and Open Graph tags |
 | `VITE_APP_DESCRIPTION` | Yes | Short description — used in `<meta name="description">` and Open Graph |
 | `VITE_APP_URL` | Yes | Canonical base URL (e.g. `https://your-domain.com`) — used in OG and canonical link |
-| `VITE_APP_OG_IMAGE` | Recommended | Absolute URL to a social preview image (1200×630px recommended) |
+| `VITE_APP_OG_IMAGE` | — | Not needed — the image is always served from `{VITE_APP_URL}/og-image.png`. Place the file in `public/og-image.png` (1200×630px recommended). |
 | `VITE_AUTH_PROVIDER` | Yes | Auth backend: `supabase`, `auth0`, `clerk`, or `keycloak` |
 | `VITE_DB_PROVIDER` | Yes | Database backend: `supabase` or `postgrest` |
 
