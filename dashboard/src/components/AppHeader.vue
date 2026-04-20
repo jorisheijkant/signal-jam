@@ -1,7 +1,7 @@
 <template>
-  <header class="header p-4 md:p-8 mb-4 md:mb-8 border border-1 border-amethyst-600 flex items-center justify-between">
+  <header class="header p-4 md:p-8 mb-4 md:mb-8 border border-1 border-amethyst-600 flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0">
     <h1 class="text-4xl font-bold">🛰️ Signal Jam</h1>
-    <nav class="flex items-center gap-4">
+    <nav class="flex items-center flex-wrap gap-3 md:gap-4">
       <router-link to="/" class="text-sm text-amethyst-700 hover:text-amethyst-900">Dashboard</router-link>
       <router-link to="/zoeken" class="text-sm text-amethyst-700 hover:text-amethyst-900">Zoeken</router-link>
       <router-link to="/samenvattingen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Samenvattingen</router-link>

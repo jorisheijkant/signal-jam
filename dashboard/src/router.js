@@ -9,7 +9,7 @@ const routes = [
   { path: '/', component: DashboardPage, meta: { public: true, title: 'Dashboard' } },
   { path: '/labelen', component: LabelingPage, meta: { title: 'Labelen' } },
   { path: '/frames', component: FramesPage, meta: { title: 'Frames' } },
-  { path: '/samenvattingen', component: SamenvattingenPage, meta: { public: true, title: 'Samenvattingen' } },
+  { path: '/samenvattingen', component: SamenvattingenPage, meta: { title: 'Samenvattingen' } },
   { path: '/zoeken', component: SearchPage, meta: { public: true, title: 'Zoeken' } },
 ]
 
