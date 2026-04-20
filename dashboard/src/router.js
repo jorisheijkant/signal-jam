@@ -6,11 +6,11 @@ import SamenvattingenPage from './pages/SamenvattingenPage.vue'
 import SearchPage from './pages/SearchPage.vue'
 
 const routes = [
-  { path: '/', component: DashboardPage, meta: { public: true } },
-  { path: '/labelen', component: LabelingPage },
-  { path: '/frames', component: FramesPage },
-  { path: '/samenvattingen', component: SamenvattingenPage },
-  { path: '/zoeken', component: SearchPage, meta: { public: true } },
+  { path: '/', component: DashboardPage, meta: { public: true, title: 'Dashboard' } },
+  { path: '/labelen', component: LabelingPage, meta: { title: 'Labelen' } },
+  { path: '/frames', component: FramesPage, meta: { title: 'Frames' } },
+  { path: '/samenvattingen', component: SamenvattingenPage, meta: { public: true, title: 'Samenvattingen' } },
+  { path: '/zoeken', component: SearchPage, meta: { public: true, title: 'Zoeken' } },
 ]
 
 const router = createRouter({

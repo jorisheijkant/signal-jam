@@ -25,6 +25,7 @@
             {{ summary.llm_provider }} · {{ formatDate(summary.generated_at) }}
           </span>
         </div>
+
         <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{ summary.content }}</p>
       </div>
     </div>

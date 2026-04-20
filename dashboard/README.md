@@ -19,7 +19,23 @@ The dev server runs at `http://localhost:5173` by default.
 
 ## Environment variables
 
-See the `.env.example` for the needed environment variables. 
+See `.env.example` for the full list. Key variables:
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_APP_TITLE` | Yes | App name — used in page `<title>` and Open Graph tags |
+| `VITE_APP_DESCRIPTION` | Yes | Short description — used in `<meta name="description">` and Open Graph |
+| `VITE_APP_URL` | Yes | Canonical base URL (e.g. `https://your-domain.com`) — used in OG and canonical link |
+| `VITE_APP_OG_IMAGE` | Recommended | Absolute URL to a social preview image (1200×630px recommended) |
+| `VITE_AUTH_PROVIDER` | Yes | Auth backend: `supabase`, `auth0`, `clerk`, or `keycloak` |
+| `VITE_DB_PROVIDER` | Yes | Database backend: `supabase` or `postgrest` |
+
+These variables are embedded at build time. After changing them, run `yarn build` again.
+
+### SEO files
+
+- **`public/robots.txt`** — blocks `/labelen` and `/frames` from crawlers; allow-lists the public pages.
+- **`public/sitemap.xml`** — lists the three public pages. Update the `https://your-domain.com` placeholder with your actual domain before deploying.
 
 ## Database
 
