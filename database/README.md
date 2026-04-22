@@ -1,10 +1,10 @@
 # Database
 
-This folder contains the PostgreSQL schema for Signal Jam.
+This folder contains the PostgreSQL schema for Signal Jam. You can use this schema to initialize the database of your choice.
 
 ## Schema Overview
 
-The database consists of two main tables:
+The database consists of four tables:
 
 ### `accounts`
 Stores social media accounts that are being tracked.
@@ -13,8 +13,8 @@ Stores social media accounts that are being tracked.
 |--------|------|-------------|
 | `id` | serial | Primary key |
 | `platform` | enum | twitter, tiktok, or facebook |
-| `platform_id` | varchar | The account's ID on the platform |
-| `username` | varchar | Handle/username |
+| `username` | varchar | Handle/username (unique per platform) |
+| `account_url` | text | URL to the account profile (optional) |
 | `display_name` | varchar | Display name (optional) |
 | `created_at` | timestamptz | When we added this account |
 
@@ -24,8 +24,8 @@ Stores all scraped posts across platforms.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | serial | Primary key |
+| `url` | text | URL of the post (unique per platform) |
 | `platform` | enum | twitter, tiktok, or facebook |
-| `platform_id` | varchar | The post's ID on the platform |
 | `account_id` | integer | Foreign key to accounts |
 | `content` | text | Post text content |
 | `post_type` | enum | original, reply, repost, or quote |
@@ -36,8 +36,33 @@ Stores all scraped posts across platforms.
 | `reposts` | integer | Retweet/share count |
 | `comments` | integer | Comment/reply count |
 | `is_checked` | boolean | Whether the post has been reviewed |
+| `is_relevant` | boolean | Whether the post is relevant to tracking |
 | `contains_misinformation` | boolean | Whether misinformation was found |
+| `notes` | text | Free-text notes on the post (optional) |
+| `frame_id` | integer | Foreign key to frames (optional) |
 | `platform_data` | jsonb | Platform-specific metadata |
+
+### `frames`
+Central misinformation themes that posts can be tagged with.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | serial | Primary key |
+| `name` | varchar | Unique frame name |
+| `description` | text | Description of the frame (optional) |
+| `created_at` | timestamptz | When the frame was created |
+
+### `summaries`
+Weekly AI-generated summaries of tracked content.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | serial | Primary key |
+| `week_start` | date | Monday of the summary week (unique) |
+| `week_end` | date | Sunday of the summary week |
+| `content` | text | Generated summary text |
+| `llm_provider` | varchar | Which LLM generated the summary (optional) |
+| `generated_at` | timestamptz | When the summary was generated |
 
 ## Setup by Provider
 
@@ -122,5 +147,7 @@ GRANT UPDATE, DELETE ON posts, frames TO anon;
 ## Notes
 
 - The `platform_data` JSONB column can store any platform-specific fields (e.g., video duration for TikTok, hashtags, media URLs)
-- Posts are uniquely identified by `(platform, platform_id)` to prevent duplicates
+- Posts are uniquely identified by `(platform, url)` to prevent duplicates
+- Accounts are uniquely identified by `(platform, username)`
 - The `contains_misinformation` field is nullable: `NULL` means not yet determined, `FALSE` means checked and clean, `TRUE` means flagged
+- The `is_relevant` field defaults to `TRUE`; set to `FALSE` to exclude posts from analysis without deleting them
