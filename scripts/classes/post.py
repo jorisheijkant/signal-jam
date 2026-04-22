@@ -17,7 +17,10 @@ class Post:
     reposts: int = 0
     comments: int = 0
     is_checked: bool = False
+    is_relevant: Optional[bool] = None
     contains_misinformation: Optional[bool] = None
+    notes: Optional[str] = None
+    frame_id: Optional[int] = None
     platform_data: Optional[dict] = None
     id: Optional[int] = None
     scraped_at: Optional[datetime] = field(default=None)
