@@ -1,22 +1,3 @@
-"""
-Weekly summary generator for Signal Jam.
-
-For each past week (Mon–Sun) that has posts but no summary yet,
-this script generates a Dutch summary using a configurable LLM provider
-and stores it in the summaries table.
-
-Usage:
-    python summarize_weeks.py
-
-Environment variables:
-    DATABASE_URL      PostgreSQL connection string (required)
-    LLM_PROVIDER      'openai' or 'anthropic' (default: anthropic)
-    OPENAI_API_KEY    Required if LLM_PROVIDER=openai
-    OPENAI_MODEL      OpenAI model name (default: gpt-4o)
-    ANTHROPIC_API_KEY Required if LLM_PROVIDER=anthropic
-    ANTHROPIC_MODEL   Anthropic model name (default: claude-sonnet-4-6)
-"""
-
 import os
 from datetime import date, timedelta
 from pathlib import Path
@@ -30,13 +11,12 @@ from functions.llm import get_llm_provider
 PROMPT_PATH = Path(__file__).parent / 'prompts' / 'weekly_summary.txt'
 LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'ollama')
 
+
 def get_monday(d: date) -> date:
-    """Return the Monday of the week containing d."""
     return d - timedelta(days=d.weekday())
 
 
 def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
-    """Return a list of (week_start, week_end) for fully completed weeks that have posts, newest first."""
     with conn.cursor() as cur:
         cur.execute("SELECT MIN(posted_at::date), MAX(posted_at::date) FROM posts")
         row = cur.fetchone()
@@ -46,7 +26,6 @@ def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
 
     earliest, _ = row
     today = date.today()
-    # Current week's Monday — exclude this entire week
     current_monday = get_monday(today)
 
     # Only summarize from 2026 onwards
@@ -59,19 +38,17 @@ def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
         weeks.append((monday, sunday))
         monday += timedelta(weeks=1)
 
-    weeks.reverse()  # newest first
+    weeks.reverse()
     return weeks
 
 
 def get_existing_summary_weeks(conn) -> set[date]:
-    """Return the set of week_start dates that already have a summary."""
     with conn.cursor() as cur:
         cur.execute("SELECT week_start FROM summaries")
         return {row[0] for row in cur.fetchall()}
 
 
 def get_posts_for_week(conn, week_start: date, week_end: date) -> list[dict]:
-    """Return all posts (with account info) posted in the given week."""
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -126,7 +103,6 @@ def main():
 
     all_weeks = get_all_weeks_with_posts(db.conn)
     existing = get_existing_summary_weeks(db.conn)
-
     pending = [(ws, we) for ws, we in all_weeks if ws not in existing]
 
     if not pending:

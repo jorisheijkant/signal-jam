@@ -8,34 +8,8 @@
         class="post-embed"
         :class="post.contains_misinformation ? 'border-l-4 border-amethyst-500 pl-3' : ''"
       >
-        <div class="flex items-center gap-2 mb-2 flex-wrap">
-          <span class="text-sm font-medium text-gray-800">
-            {{ post.account?.display_name || post.account?.username || 'Onbekend' }}
-          </span>
-          <span class="text-xs text-gray-400">
-            @{{ post.account?.username }}
-          </span>
-          <span class="text-xs text-gray-400">·</span>
-          <span class="text-xs text-gray-400">{{ formatDate(post.posted_at) }}</span>
-          <span v-if="post.post_type === 'repost'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
-            ↻ repost
-          </span>
-          <span v-else-if="post.post_type === 'quote'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
-            ❝ quote
-          </span>
-          <span v-else-if="post.post_type === 'reply'" class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded">
-            ↩ reply
-          </span>
-          <span
-            v-if="post.contains_misinformation"
-            class="inline-block px-2 py-0.5 text-xs font-medium bg-amethyst-600 text-white rounded-full"
-          >
-            Bevat misinformatie
-          </span>
-        </div>
-        <TwitterEmbed v-if="post.platform === 'twitter'" :url="post.url" />
-        <TiktokEmbed v-else-if="post.platform === 'tiktok'" :url="post.url" />
-        <FacebookEmbed v-else-if="post.platform === 'facebook'" :url="post.url" />
+        <PostHeader :post="post" />
+        <PostEmbed :platform="post.platform" :url="post.url" />
       </div>
       <button
         v-if="hasMore"
@@ -51,19 +25,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getCheckedPosts } from '../database'
-import TwitterEmbed from './embeds/TwitterEmbed.vue'
-import TiktokEmbed from './embeds/TiktokEmbed.vue'
-import FacebookEmbed from './embeds/FacebookEmbed.vue'
+import PostHeader from './PostHeader.vue'
+import PostEmbed from './embeds/PostEmbed.vue'
 
 const PAGE_SIZE = 10
 const posts = ref([])
 const hasMore = ref(true)
-
-function formatDate(ts) {
-  if (!ts) return ''
-  const d = new Date(ts)
-  return d.toLocaleString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 async function loadMore() {
   const { data, error } = await getCheckedPosts(PAGE_SIZE, posts.value.length)
@@ -72,9 +39,7 @@ async function loadMore() {
     return
   }
   posts.value.push(...data)
-  if (data.length < PAGE_SIZE) {
-    hasMore.value = false
-  }
+  if (data.length < PAGE_SIZE) hasMore.value = false
 }
 
 onMounted(loadMore)

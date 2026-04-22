@@ -1,15 +1,13 @@
 import shutil
 from pathlib import Path
-from glob import glob
 import time
+
 
 def copy_last_ndjson(output_folder, name_folder_friendly):
     download_folder = Path.home() / "Downloads"
     time.sleep(2)  # Give download time to start
 
-    # Wait for the download to complete (check for .ndjson file)
-    max_wait = 60  # Maximum 60 seconds wait
-    wait_interval = 1
+    max_wait = 60
     downloaded_file = None
 
     for _ in range(max_wait):
@@ -20,18 +18,14 @@ def copy_last_ndjson(output_folder, name_folder_friendly):
             time.sleep(0.5)
             if downloaded_file.exists() and downloaded_file.stat().st_size == initial_size:
                 break
-        time.sleep(wait_interval)
+        time.sleep(1)
 
     if downloaded_file and downloaded_file.exists():
-        # Create target filename with timestamp
         target_filename = f"{name_folder_friendly}_{int(time.time())}.ndjson"
         target_path = Path(output_folder) / target_filename
-
-        # Move the file to output folder
         shutil.move(str(downloaded_file), str(target_path))
         print(f"Downloaded file moved to {target_path}")
         return target_path
     else:
         print("Warning: Could not find downloaded file in Downloads folder")
         return None
-

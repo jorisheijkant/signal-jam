@@ -1,4 +1,5 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
+import { groupPostsByDay, groupPostsByAccount } from '../utils.js'
 
 const url = import.meta.env.VITE_POSTGREST_URL
 const anonKey = import.meta.env.VITE_POSTGREST_ANON_KEY
@@ -18,22 +19,7 @@ async function getPostsPerDay(days = 20) {
     .order('posted_at', { ascending: true })
 
   if (error) return { data: null, error }
-
-  const counts = {}
-  for (const post of data) {
-    const day = post.posted_at.slice(0, 10)
-    counts[day] = (counts[day] || 0) + 1
-  }
-
-  const result = []
-  for (let i = days; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    result.push({ date: key, count: counts[key] || 0 })
-  }
-
-  return { data: result, error: null }
+  return { data: groupPostsByDay(data, days), error: null }
 }
 
 async function getPosts(limit = 10, offset = 0, startDate = null) {
@@ -73,23 +59,7 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   const { data, error } = await query
 
   if (error) return { data: null, error }
-
-  const counts = {}
-  for (const post of data) {
-    const id = post.account_id
-    if (!counts[id]) {
-      counts[id] = { ...post.account, misinfoCount: 0, totalCount: 0 }
-    }
-    counts[id].totalCount++
-    if (post.contains_misinformation) counts[id].misinfoCount++
-  }
-
-  const result = Object.values(counts)
-    .sort((a, b) => b.misinfoCount - a.misinfoCount)
-    .filter(a => a.misinfoCount > 0)
-    .slice(0, limit)
-
-  return { data: result, error: null }
+  return { data: groupPostsByAccount(data, limit), error: null }
 }
 
 async function getPostCounts() {
@@ -185,14 +155,11 @@ async function getActiveFrames(days = 30) {
   const counts = {}
   for (const post of data) {
     const id = post.frame_id
-    if (!counts[id]) {
-      counts[id] = { id, name: post.frame.name, count: 0 }
-    }
+    if (!counts[id]) counts[id] = { id, name: post.frame.name, count: 0 }
     counts[id].count++
   }
 
-  const result = Object.values(counts).sort((a, b) => b.count - a.count)
-  return { data: result, error: null }
+  return { data: Object.values(counts).sort((a, b) => b.count - a.count), error: null }
 }
 
 async function createFrame(name, description = '') {

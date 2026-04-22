@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { groupPostsByDay, groupPostsByAccount } from '../utils.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
@@ -17,22 +18,7 @@ async function getPostsPerDay(days = 20) {
     .order('posted_at', { ascending: true })
 
   if (error) return { data: null, error }
-
-  const counts = {}
-  for (const post of data) {
-    const day = post.posted_at.slice(0, 10)
-    counts[day] = (counts[day] || 0) + 1
-  }
-
-  const result = []
-  for (let i = days; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    result.push({ date: key, count: counts[key] || 0 })
-  }
-
-  return { data: result, error: null }
+  return { data: groupPostsByDay(data, days), error: null }
 }
 
 async function getPosts(limit = 10, offset = 0, startDate = null) {
@@ -72,23 +58,7 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   const { data, error } = await query
 
   if (error) return { data: null, error }
-
-  const counts = {}
-  for (const post of data) {
-    const id = post.account_id
-    if (!counts[id]) {
-      counts[id] = { ...post.account, misinfoCount: 0, totalCount: 0 }
-    }
-    counts[id].totalCount++
-    if (post.contains_misinformation) counts[id].misinfoCount++
-  }
-
-  const result = Object.values(counts)
-    .sort((a, b) => b.misinfoCount - a.misinfoCount)
-    .filter(a => a.misinfoCount > 0)
-    .slice(0, limit)
-
-  return { data: result, error: null }
+  return { data: groupPostsByAccount(data, limit), error: null }
 }
 
 async function getPostCounts() {
@@ -115,36 +85,20 @@ async function getUnlabeledCount(startDate = null) {
     .select('*', { count: 'exact', head: true })
     .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
-  const { count, error } = await query
-    .eq('is_checked', false)
+  const { count, error } = await query.eq('is_checked', false)
   return { count, error }
 }
 
 async function updatePost(id, fields) {
-  console.log('[DB] updatePost →', { id, fields })
-  const response = await client
+  const { data, error } = await client
     .from('posts')
     .update(fields)
     .eq('id', id)
     .select()
-
-  console.log('[DB] updatePost ←', {
-    status: response.status,
-    statusText: response.statusText,
-    data: response.data,
-    error: response.error,
-  })
-
-  if (!response.error && (!response.data || response.data.length === 0)) {
-    console.warn('[DB] updatePost: no rows updated — check RLS policies or if post id exists:', id)
-  }
-
-  return { data: response.data, error: response.error }
+  return { data, error }
 }
 
 async function updateSiblingReposts(post, fields) {
-  // Determine the root post id: if this post is itself a repost, use its parent;
-  // if it's the original, use its own id.
   const rootId = post.parent_post_id ?? post.id
 
   const { data, error } = await client
@@ -158,19 +112,11 @@ async function updateSiblingReposts(post, fields) {
 }
 
 async function deletePost(id) {
-  console.log('[DB] markPostIrrelevant →', { id })
-  const response = await client
+  const { error } = await client
     .from('posts')
     .update({ is_relevant: false, is_checked: true })
     .eq('id', id)
-
-  console.log('[DB] markPostIrrelevant ←', {
-    status: response.status,
-    statusText: response.statusText,
-    error: response.error,
-  })
-
-  return { error: response.error }
+  return { error }
 }
 
 async function getSummaries() {
@@ -206,14 +152,11 @@ async function getActiveFrames(days = 30) {
   const counts = {}
   for (const post of data) {
     const id = post.frame_id
-    if (!counts[id]) {
-      counts[id] = { id, name: post.frame.name, count: 0 }
-    }
+    if (!counts[id]) counts[id] = { id, name: post.frame.name, count: 0 }
     counts[id].count++
   }
 
-  const result = Object.values(counts).sort((a, b) => b.count - a.count)
-  return { data: result, error: null }
+  return { data: Object.values(counts).sort((a, b) => b.count - a.count), error: null }
 }
 
 async function createFrame(name, description = '') {

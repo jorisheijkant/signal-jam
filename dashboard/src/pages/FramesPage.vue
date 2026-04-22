@@ -5,7 +5,6 @@
       <span class="text-sm text-gray-500">{{ frames.length }} frame{{ frames.length !== 1 ? 's' : '' }}</span>
     </div>
 
-    <!-- Add frame form -->
     <form @submit.prevent="addFrame" class="border border-amethyst-200 p-4 md:p-6 mb-6">
       <h3 class="text-sm font-semibold text-gray-700 mb-3">Nieuw frame toevoegen</h3>
       <div class="flex flex-col gap-3">
@@ -41,14 +40,12 @@
       </div>
     </form>
 
-    <!-- Frames list -->
     <div class="space-y-3">
       <div
         v-for="frame in frames"
         :key="frame.id"
         class="border border-amethyst-200 p-4"
       >
-        <!-- Edit mode -->
         <template v-if="frame._editing">
           <div class="flex flex-col gap-3">
             <label class="flex flex-col gap-1 text-sm text-gray-700">
@@ -88,7 +85,6 @@
           </div>
         </template>
 
-        <!-- View mode -->
         <template v-else>
           <div class="flex items-start justify-between gap-4">
             <div>

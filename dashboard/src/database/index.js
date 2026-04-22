@@ -1,11 +1,9 @@
 import supabaseDb from './providers/supabase.js'
 import postgrestDb from './providers/postgrest.js'
 
-// Configure which database provider to use
 const DB_PROVIDER = import.meta.env.VITE_DB_PROVIDER || 'supabase'
 
-// Only show/label posts from this date onward. Older posts remain in the DB
-// but are excluded from the dashboard and labeling queue.
+// Posts before this date are excluded from the dashboard and labeling queue
 const DASHBOARD_START_DATE = '2026-01-01'
 
 const providers = {

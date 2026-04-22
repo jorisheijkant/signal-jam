@@ -20,13 +20,11 @@ onMounted(async () => {
     return
   }
 
-  // Chart dimensions - responsive to container
   const margin = { top: 10, right: 10, bottom: 30, left: 40 }
   const containerWidth = chartContainer.value.offsetWidth
   const width = containerWidth - margin.left - margin.right
   const height = 250 - margin.top - margin.bottom
 
-  // Create SVG
   const svg = d3.select(chartContainer.value)
     .append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -34,23 +32,19 @@ onMounted(async () => {
     .append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
 
-  // X scale
   const x = d3.scaleBand()
     .domain(data.map(d => d.date))
     .range([0, width])
     .padding(0.2)
 
-  // Y scale
   const y = d3.scaleLinear()
     .domain([0, d3.max(data, d => d.count)])
     .range([height, 0])
 
-  // X axis - minimalist style
   svg.append('g')
     .attr('transform', `translate(0,${height})`)
     .call(d3.axisBottom(x)
       .tickFormat((d, i) => {
-        // Only show every 5th date
         if (i % 5 === 0) {
           const parts = d.split('-')
           return `${parts[2]}/${parts[1]}`
@@ -59,28 +53,24 @@ onMounted(async () => {
       })
       .tickSize(0))
     .select('.domain')
-    .attr('stroke', '#E5E7EB') // Light gray
+    .attr('stroke', '#E5E7EB')
 
-  // Style x-axis text
   svg.selectAll('.tick text')
     .attr('fill', '#6B7280')
     .style('font-size', '11px')
 
-  // Y axis - minimalist style
   svg.append('g')
     .call(d3.axisLeft(y)
       .ticks(5)
       .tickSize(0)
       .tickPadding(8))
     .select('.domain')
-    .attr('stroke', '#E5E7EB') // Light gray
+    .attr('stroke', '#E5E7EB')
 
-  // Style y-axis text
   svg.selectAll('.tick text')
     .attr('fill', '#6B7280')
     .style('font-size', '11px')
 
-  // Add horizontal grid lines
   svg.selectAll('.grid-line')
     .data(y.ticks(5))
     .enter()
@@ -93,7 +83,6 @@ onMounted(async () => {
     .attr('stroke', '#F3F4F6')
     .attr('stroke-width', 1)
 
-  // Add bars
   svg.selectAll('.bar')
     .data(data)
     .enter()
@@ -103,15 +92,13 @@ onMounted(async () => {
     .attr('y', d => y(d.count))
     .attr('width', x.bandwidth())
     .attr('height', d => height - y(d.count))
-    .attr('fill', '#8A89C0') // lavender color
-    .attr('rx', 2) // Slightly rounded corners
+    .attr('fill', '#8A89C0')
+    .attr('rx', 2)
     .on('mouseover', function(event, d) {
-      d3.select(this)
-        .attr('fill', '#B084CC') // amethyst on hover
+      d3.select(this).attr('fill', '#B084CC')
     })
     .on('mouseout', function(event, d) {
-      d3.select(this)
-        .attr('fill', '#8A89C0') // back to lavender
+      d3.select(this).attr('fill', '#8A89C0')
     })
 })
 </script>
