@@ -189,7 +189,7 @@ async function deleteFrame(id) {
   return { error }
 }
 
-async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null) {
+async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null, endDate = null) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*), frame:frames(id, name)')
@@ -198,6 +198,7 @@ async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = nu
   if (term) query = query.ilike('content', `%${term}%`)
   if (frameId) query = query.eq('frame_id', frameId)
   if (startDate) query = query.gte('posted_at', startDate)
+  if (endDate) query = query.lte('posted_at', `${endDate}T23:59:59`)
 
   const { data, error, count } = await query
     .order('posted_at', { ascending: false })

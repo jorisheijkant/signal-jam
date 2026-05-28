@@ -20,6 +20,16 @@
           {{ frame.name }}
         </option>
       </select>
+      <input
+        v-model="startDate"
+        type="date"
+        class="border border-gray-300 px-3 py-2 text-sm"
+      />
+      <input
+        v-model="endDate"
+        type="date"
+        class="border border-gray-300 px-3 py-2 text-sm"
+      />
       <button
         type="submit"
         class="px-4 py-2 text-sm border border-amethyst-600 text-amethyst-700 hover:bg-amethyst-100 transition-colors cursor-pointer"
@@ -71,6 +81,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { searchPosts, getFrames, updatePost, updateSiblingReposts, deletePost } from '../database'
 import { session } from '../auth'
 import { addFormFields } from '../utils/postForm.js'
@@ -79,21 +90,44 @@ import PostEmbed from '../components/embeds/PostEmbed.vue'
 import PostLabelForm from '../components/PostLabelForm.vue'
 
 const PAGE_SIZE = 20
+const route = useRoute()
+const router = useRouter()
+
 const term = ref('')
 const selectedFrameId = ref(null)
+const startDate = ref('')
+const endDate = ref('')
 const frames = ref([])
 const posts = ref([])
 const hasMore = ref(false)
 const searched = ref(false)
 const loading = ref(false)
 
+function buildQuery() {
+  const query = {}
+  if (term.value) query.term = term.value
+  if (selectedFrameId.value != null) query.frameId = String(selectedFrameId.value)
+  if (startDate.value) query.startDate = startDate.value
+  if (endDate.value) query.endDate = endDate.value
+  return query
+}
+
 async function runSearch() {
+  router.replace({ query: buildQuery() })
+
   posts.value = []
   hasMore.value = false
   searched.value = false
   loading.value = true
 
-  const { data, error } = await searchPosts(term.value || null, selectedFrameId.value, PAGE_SIZE, 0)
+  const { data, error } = await searchPosts(
+    term.value || null,
+    selectedFrameId.value,
+    PAGE_SIZE,
+    0,
+    startDate.value || null,
+    endDate.value || null
+  )
   loading.value = false
   if (error) {
     console.error('Search failed:', error)
@@ -106,7 +140,14 @@ async function runSearch() {
 
 async function loadMore() {
   loading.value = true
-  const { data, error } = await searchPosts(term.value || null, selectedFrameId.value, PAGE_SIZE, posts.value.length)
+  const { data, error } = await searchPosts(
+    term.value || null,
+    selectedFrameId.value,
+    PAGE_SIZE,
+    posts.value.length,
+    startDate.value || null,
+    endDate.value || null
+  )
   loading.value = false
   if (error) {
     console.error('Load more failed:', error)
@@ -154,5 +195,13 @@ async function submitPost(post) {
 onMounted(async () => {
   const { data } = await getFrames()
   frames.value = data || []
+
+  if (route.query.term) term.value = route.query.term
+  if (route.query.frameId) selectedFrameId.value = parseInt(route.query.frameId)
+  if (route.query.startDate) startDate.value = route.query.startDate
+  if (route.query.endDate) endDate.value = route.query.endDate
+
+  const hasParams = route.query.term || route.query.frameId || route.query.startDate || route.query.endDate
+  if (hasParams) await runSearch()
 })
 </script>

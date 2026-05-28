@@ -33,6 +33,6 @@ export const createFrame = db.createFrame
 export const updateFrame = db.updateFrame
 export const deleteFrame = db.deleteFrame
 export const getActiveFrames = db.getActiveFrames
-export const searchPosts = (term, frameId, limit, offset) => db.searchPosts(term, frameId, limit, offset, DASHBOARD_START_DATE)
+export const searchPosts = (term, frameId, limit, offset, startDate, endDate) => db.searchPosts(term, frameId, limit, offset, startDate ?? DASHBOARD_START_DATE, endDate)
 
 export default db

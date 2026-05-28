@@ -2,16 +2,18 @@
   <div class="module daily-activity-module bg-white border border-1 border-amethyst-200 p-4 md:p-8 w-full">
     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Dagelijkse activiteit</h2>
     <p class="text-sm mb-4 text-gray-400">Het aantal posts per dag met misinformatie.</p>
-    <div ref="chartContainer" class="chart-container"></div>
+    <div ref="chartContainer" class="chart-container relative"></div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import * as d3 from 'd3'
 import { getPostsPerDay } from '../database'
 
 const chartContainer = ref(null)
+const router = useRouter()
 
 onMounted(async () => {
   const { data, error } = await getPostsPerDay(20)
@@ -24,6 +26,24 @@ onMounted(async () => {
   const containerWidth = chartContainer.value.offsetWidth
   const width = containerWidth - margin.left - margin.right
   const height = 250 - margin.top - margin.bottom
+
+  const tooltip = document.createElement('div')
+  Object.assign(tooltip.style, {
+    position: 'absolute',
+    background: 'rgba(0,0,0,0.72)',
+    color: 'white',
+    fontSize: '12px',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    pointerEvents: 'none',
+    whiteSpace: 'nowrap',
+    opacity: '0',
+    transition: 'opacity 0.1s',
+    transform: 'translate(-50%, -100%)',
+  })
+  chartContainer.value.appendChild(tooltip)
+
+  const supportsHover = window.matchMedia('(hover: hover)').matches
 
   const svg = d3.select(chartContainer.value)
     .append('svg')
@@ -94,11 +114,24 @@ onMounted(async () => {
     .attr('height', d => height - y(d.count))
     .attr('fill', '#8A89C0')
     .attr('rx', 2)
+    .style('cursor', 'pointer')
     .on('mouseover', function(event, d) {
       d3.select(this).attr('fill', '#B084CC')
+      if (!supportsHover) return
+      const barTop = margin.top + y(d.count)
+      const fitsAbove = barTop > 32
+      tooltip.textContent = `${d.count} posts`
+      tooltip.style.left = `${margin.left + x(d.date) + x.bandwidth() / 2}px`
+      tooltip.style.top = fitsAbove ? `${barTop - 6}px` : `${barTop + 6}px`
+      tooltip.style.transform = fitsAbove ? 'translate(-50%, -100%)' : 'translate(-50%, 0)'
+      tooltip.style.opacity = '1'
     })
     .on('mouseout', function(event, d) {
       d3.select(this).attr('fill', '#8A89C0')
+      tooltip.style.opacity = '0'
+    })
+    .on('click', function(event, d) {
+      router.push({ path: '/zoeken', query: { startDate: d.date, endDate: d.date } })
     })
 })
 </script>
