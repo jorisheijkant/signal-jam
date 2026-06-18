@@ -1,8 +1,8 @@
 [
   "sputnikglobal.com",
-  "http://rt.com",
+  "%22http://rt.com%22",
   "www.rt.com",
-  "https://rt.com",
+  "%22https://rt.com%22",
   "voiceofeurope.com",
   "voiceofeurope.eu",
   "ria.ru"
