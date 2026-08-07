@@ -78,8 +78,7 @@ def _install_zeeschuimer(driver):
     driver.execute_script((SCRAPING_TOOLS_DIR / 'stealth.js').read_text())
     print("Successfully installed Zeeschuimer and loaded the stealth script...")
 
-    # TODO: Tweak these for my specific use case
-    driver.set_page_load_timeout(15)
+    driver.set_page_load_timeout(45)
     driver.set_script_timeout(120)
     driver.implicitly_wait(5)
 

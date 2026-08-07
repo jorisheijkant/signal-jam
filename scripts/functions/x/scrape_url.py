@@ -3,6 +3,8 @@ import time
 import os
 from pathlib import Path
 
+from selenium.common.exceptions import TimeoutException
+
 from functions.utils.name_to_slug import name_to_slug
 from functions.utils.copy_last_ndjson import copy_last_ndjson
 from functions.utils.scroll_to_end import scroll_to_end
@@ -21,7 +23,14 @@ def scrape_url(driver, url, label):
     driver.execute_script("document.querySelector('button.reset-all').click();")
     driver.switch_to.new_window("tab")
 
-    driver.get(url)
+    try:
+        driver.get(url)
+    except TimeoutException:
+        print(f"  [skipped] Navigation to {url} timed out, moving on")
+        driver.close()
+        driver.switch_to.window(handles[0])
+        return None
+
     scroll_to_end(driver)
 
     driver.switch_to.window(handles[0])
