@@ -2,6 +2,7 @@ from .base import LLMProvider
 from .providers.openai import OpenAIProvider
 from .providers.anthropic import AnthropicProvider
 from .providers.ollama import OllamaProvider
+from .detect_language_with_llm import detect_language_with_llm, LanguageDetection
 
 PROVIDERS = {
     'openai': OpenAIProvider,
