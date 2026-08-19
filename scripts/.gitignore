@@ -109,5 +109,5 @@ data/
 !data/.gitkeep
 
 # Source data (commit only .example.json files)
-source_data/*.json
-!source_data/*.example.json
+source_data/**/*.json
+!source_data/**/*.example.json

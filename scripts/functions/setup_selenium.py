@@ -94,7 +94,6 @@ def _open_zeeschuimer_panel(driver):
     driver.get(zeeschuimer_url)
     print("Zeeschuimer Extension screen loaded")
 
-    # TODO: also toggle other platforms here (FB and Tiktok)
     time.sleep(2)
     driver.execute_script("document.querySelectorAll('.toggle-switch input').forEach((e) => { if(!e.checked) { e.click(); }}); ")
     driver.switch_to.window(driver.window_handles[0])
