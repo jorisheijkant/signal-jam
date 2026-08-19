@@ -16,6 +16,7 @@ from functions.utils.pick_rotating_sample import pick_rotating_sample
 
 X_SEARCH_URL_BASE = "https://x.com/search?q="
 X_SEARCH_URL_AFFIX = "%20lang%3Anl&src=typed_query"
+X_PROFILE_URL_SUFFIX = "/all"
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 REQUIRED_LANGUAGE_ISO = 'nl'
@@ -93,13 +94,14 @@ def main():
     try:
         for user_index, user in enumerate(x_users_to_scrape, 1):
             print(f"Now scraping user {user_index}/{len(x_users_to_scrape)}: {user['name']}")
-            username = user["url"].rstrip("/").split("/")[-1]
+            profile_url = user["url"].rstrip("/")
+            username = profile_url.split("/")[-1]
 
             if has_post_today(db.conn, "twitter", username):
                 print(f"  [skipped] {user['name']} already has a post from today in the database")
                 continue
 
-            user_ndjson_path = scrape_url(driver, user["url"], user["name"])
+            user_ndjson_path = scrape_url(driver, f"{profile_url}{X_PROFILE_URL_SUFFIX}", user["name"])
             print(f"Written ndjson at {user_ndjson_path}")
 
             if user_ndjson_path:

@@ -60,7 +60,8 @@ def copy_profile_to_local_folder(profile_dir):
 
 def _build_firefox_driver(local_profile_dir):
     firefox_options = Options()
-    firefox_options.add_argument("-headless")
+    if os.getenv('SELENIUM_HEADLESS', 'true').lower() != 'false':
+        firefox_options.add_argument("-headless")
     firefox_profile = webdriver.FirefoxProfile(str(local_profile_dir))
     firefox_profile.set_preference("security.fileuri.strict_origin_policy", False)
     firefox_profile.update_preferences()
@@ -74,7 +75,7 @@ def _build_firefox_driver(local_profile_dir):
 
 
 def _install_zeeschuimer(driver):
-    driver.install_addon(str(SCRAPING_TOOLS_DIR / 'zeeschuimer-v1.13.4.xpi'), temporary=True)  # TODO: update version when upgrading
+    driver.install_addon(str(SCRAPING_TOOLS_DIR / 'zeeschuimer-1.14.2.xpi'), temporary=True)  # TODO: update version when upgrading
     driver.execute_script((SCRAPING_TOOLS_DIR / 'stealth.js').read_text())
     print("Successfully installed Zeeschuimer and loaded the stealth script...")
 

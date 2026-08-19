@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 
 from functions.utils.name_to_slug import name_to_slug
 from functions.utils.copy_last_ndjson import copy_last_ndjson
@@ -40,6 +41,8 @@ def scrape_url(driver, url, label):
     print(f"Found {num_items} items for {label}")
 
     if num_items > 0:
-        driver.execute_script("document.querySelector('#stats-twittercom .download-ndjson').click();")
+        download_button = driver.find_element(
+            By.CSS_SELECTOR, '#stats-twittercom .download-options button[data-format="ndjson"]')
+        driver.execute_script("arguments[0].click();", download_button)
         return copy_last_ndjson(output_folder, label_slug)
     return None
