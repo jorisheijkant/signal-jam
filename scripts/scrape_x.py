@@ -17,6 +17,7 @@ X_PLATFORM_STATS_ID = 'twittercom'
 X_SEARCH_URL_BASE = "https://x.com/search?q="
 X_SEARCH_URL_AFFIX = "%20lang%3Anl&src=typed_query"
 X_PROFILE_URL_SUFFIX = "/all"
+SELENIUM_HEADLESS = True
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
@@ -44,7 +45,7 @@ def main():
         terms_to_scrape, TERMS_PER_RUN, ROTATION_STATE_PATH, 'terms')
 
     db = Database()
-    driver = setup_selenium()
+    driver = setup_selenium(headless=SELENIUM_HEADLESS)
     llm = get_llm_provider(LANGUAGE_DETECTION_PROVIDER)
 
     try:

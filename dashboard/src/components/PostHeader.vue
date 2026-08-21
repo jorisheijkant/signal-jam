@@ -19,7 +19,7 @@
       v-if="post.contains_misinformation"
       class="inline-block px-2 py-0.5 text-xs font-medium bg-amethyst-600 text-white rounded-full"
     >
-      Bevat misinformatie
+      Bevat desinformatie
     </span>
   </div>
 </template>

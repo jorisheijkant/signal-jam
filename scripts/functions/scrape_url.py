@@ -14,11 +14,12 @@ SCRIPTS_DIR = Path(__file__).parent.parent
 DATA_DIR = SCRIPTS_DIR / "data"
 
 
-def scrape_url(driver, url, label, platform_stats_id):
+def scrape_url(driver, url, label, platform_stats_id, on_scroll=None):
     """Navigate to url, scroll to load items, and download Zeeschuimer's ndjson capture.
 
     platform_stats_id is Zeeschuimer's per-platform id (e.g. 'twittercom', 'tiktokcom'),
     used to find that platform's stats row in the Zeeschuimer panel.
+    on_scroll, if given, is forwarded to scroll_to_end for platform-specific error recovery.
     """
     label_slug = name_to_slug(label)
     output_folder = DATA_DIR / label_slug
@@ -37,7 +38,7 @@ def scrape_url(driver, url, label, platform_stats_id):
         driver.switch_to.window(handles[0])
         return None
 
-    scroll_to_end(driver)
+    scroll_to_end(driver, on_scroll=on_scroll)
 
     driver.switch_to.window(handles[0])
     time.sleep(5)

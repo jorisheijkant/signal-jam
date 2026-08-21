@@ -2,7 +2,14 @@ import random
 import time
 
 
-def scroll_to_end(driver, max_scrolls=5):
+def scroll_to_end(driver, max_scrolls=5, on_scroll=None):
+    """Scroll to the bottom of the page repeatedly until content stops growing.
+
+    on_scroll, if given, is called with the driver after every scroll so callers
+    can recover from platform-specific loading errors (e.g. an error card that
+    needs a refresh click) before the next height check. Unused by default, so
+    this stays provider-agnostic.
+    """
     scrolls_without_change = 0
     max_scrolls_without_change = 3
     previous_height = 0
@@ -12,6 +19,9 @@ def scroll_to_end(driver, max_scrolls=5):
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(scroll_interval)
+
+        if on_scroll:
+            on_scroll(driver)
 
         current_height = driver.execute_script("return document.body.scrollHeight")
 

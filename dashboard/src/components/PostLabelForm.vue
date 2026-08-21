@@ -7,7 +7,7 @@
 
     <label class="flex items-center gap-2 text-sm text-gray-700">
       <input type="checkbox" v-model="post._form.contains_misinformation" class="accent-amethyst-600" />
-      Bevat misinformatie
+      Bevat desinformatie
     </label>
 
     <label class="flex items-center gap-2 text-sm text-gray-700">

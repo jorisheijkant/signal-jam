@@ -58,9 +58,9 @@ def copy_profile_to_local_folder(profile_dir):
     return local_profile_dir
 
 
-def _build_firefox_driver(local_profile_dir):
+def _build_firefox_driver(local_profile_dir, headless):
     firefox_options = Options()
-    if os.getenv('SELENIUM_HEADLESS', 'true').lower() != 'false':
+    if headless:
         firefox_options.add_argument("-headless")
     firefox_profile = webdriver.FirefoxProfile(str(local_profile_dir))
     firefox_profile.set_preference("security.fileuri.strict_origin_policy", False)
@@ -99,11 +99,11 @@ def _open_zeeschuimer_panel(driver):
     driver.switch_to.window(driver.window_handles[0])
 
 
-def setup_selenium():
+def setup_selenium(headless=True):
     firefox_profile_dir = get_profile()
     local_profile_dir = copy_profile_to_local_folder(firefox_profile_dir)
 
-    driver = _build_firefox_driver(local_profile_dir)
+    driver = _build_firefox_driver(local_profile_dir, headless)
     _install_zeeschuimer(driver)
     _open_zeeschuimer_panel(driver)
 
