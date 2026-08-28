@@ -5,6 +5,7 @@
       <router-link to="/" class="text-sm text-amethyst-700 hover:text-amethyst-900">Dashboard</router-link>
       <router-link to="/zoeken" class="text-sm text-amethyst-700 hover:text-amethyst-900">Zoeken</router-link>
       <router-link to="/samenvattingen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Samenvattingen</router-link>
+      <router-link to="/over" class="text-sm text-amethyst-700 hover:text-amethyst-900">Over</router-link>
       <template v-if="session">
         <router-link to="/labelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">
           Labelen<span v-if="unlabeledCount !== null"> ({{ unlabeledCount }})</span>
