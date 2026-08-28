@@ -20,6 +20,15 @@
           {{ frame.name }}
         </option>
       </select>
+      <select
+        v-model="selectedPlatform"
+        class="border border-gray-300 px-3 py-2 text-sm"
+      >
+        <option :value="null">Alle platformen</option>
+        <option v-for="platform in PLATFORMS" :key="platform.value" :value="platform.value">
+          {{ platform.label }}
+        </option>
+      </select>
       <input
         v-model="startDate"
         type="date"
@@ -90,11 +99,17 @@ import PostEmbed from '../components/embeds/PostEmbed.vue'
 import PostLabelForm from '../components/PostLabelForm.vue'
 
 const PAGE_SIZE = 20
+const PLATFORMS = [
+  { value: 'twitter', label: 'Twitter' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'facebook', label: 'Facebook' },
+]
 const route = useRoute()
 const router = useRouter()
 
 const term = ref('')
 const selectedFrameId = ref(null)
+const selectedPlatform = ref(null)
 const startDate = ref('')
 const endDate = ref('')
 const frames = ref([])
@@ -107,6 +122,7 @@ function buildQuery() {
   const query = {}
   if (term.value) query.term = term.value
   if (selectedFrameId.value != null) query.frameId = String(selectedFrameId.value)
+  if (selectedPlatform.value) query.platform = selectedPlatform.value
   if (startDate.value) query.startDate = startDate.value
   if (endDate.value) query.endDate = endDate.value
   return query
@@ -126,7 +142,8 @@ async function runSearch() {
     PAGE_SIZE,
     0,
     startDate.value || null,
-    endDate.value || null
+    endDate.value || null,
+    selectedPlatform.value || null
   )
   loading.value = false
   if (error) {
@@ -146,7 +163,8 @@ async function loadMore() {
     PAGE_SIZE,
     posts.value.length,
     startDate.value || null,
-    endDate.value || null
+    endDate.value || null,
+    selectedPlatform.value || null
   )
   loading.value = false
   if (error) {
@@ -198,10 +216,11 @@ onMounted(async () => {
 
   if (route.query.term) term.value = route.query.term
   if (route.query.frameId) selectedFrameId.value = parseInt(route.query.frameId)
+  if (route.query.platform) selectedPlatform.value = route.query.platform
   if (route.query.startDate) startDate.value = route.query.startDate
   if (route.query.endDate) endDate.value = route.query.endDate
 
-  const hasParams = route.query.term || route.query.frameId || route.query.startDate || route.query.endDate
+  const hasParams = route.query.term || route.query.frameId || route.query.platform || route.query.startDate || route.query.endDate
   if (hasParams) await runSearch()
 })
 </script>

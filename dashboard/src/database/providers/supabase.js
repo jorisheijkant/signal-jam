@@ -186,14 +186,54 @@ async function deleteFrame(id) {
   return { error }
 }
 
-async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null, endDate = null) {
+function escapeOrFilterValue(value) {
+  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+}
+
+async function getAccountIdsMatchingUsername(term) {
+  const { data, error } = await client
+    .from('accounts')
+    .select('id')
+    .ilike('username', `%${term}%`)
+  if (error || !data) return []
+  return data.map(account => account.id)
+}
+
+async function getPostIdsByAccountIds(accountIds) {
+  if (accountIds.length === 0) return []
+  const { data, error } = await client
+    .from('posts')
+    .select('id')
+    .in('account_id', accountIds)
+  if (error || !data) return []
+  return data.map(post => post.id)
+}
+
+async function buildTermFilter(term) {
+  const orFilters = [`content.ilike.${escapeOrFilterValue(`%${term}%`)}`]
+
+  const matchingAccountIds = await getAccountIdsMatchingUsername(term)
+  if (matchingAccountIds.length === 0) return orFilters.join(',')
+
+  orFilters.push(`account_id.in.(${matchingAccountIds.join(',')})`)
+
+  const repostedPostIds = await getPostIdsByAccountIds(matchingAccountIds)
+  if (repostedPostIds.length > 0) {
+    orFilters.push(`parent_post_id.in.(${repostedPostIds.join(',')})`)
+  }
+
+  return orFilters.join(',')
+}
+
+async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null, endDate = null, platform = null) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*), frame:frames(id, name)')
     .eq('is_relevant', true)
 
-  if (term) query = query.ilike('content', `%${term}%`)
+  if (term) query = query.or(await buildTermFilter(term))
   if (frameId) query = query.eq('frame_id', frameId)
+  if (platform) query = query.eq('platform', platform)
   if (startDate) query = query.gte('posted_at', startDate)
   if (endDate) query = query.lte('posted_at', `${endDate}T23:59:59`)
 
