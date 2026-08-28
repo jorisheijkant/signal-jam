@@ -70,7 +70,7 @@
         <PostHeader :post="post" />
 
         <div class="post-embed mb-4">
-          <PostEmbed :platform="post.platform" :url="post.url" />
+          <PostEmbed :platform="post.platform" :url="post.url" :content="post.content" />
         </div>
 
         <PostLabelForm v-if="session" :post="post" :frames="frames" @submit="submitPost(post)" />
@@ -103,6 +103,7 @@ const PLATFORMS = [
   { value: 'twitter', label: 'Twitter' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'facebook', label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
 ]
 const route = useRoute()
 const router = useRouter()

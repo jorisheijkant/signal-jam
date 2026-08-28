@@ -12,5 +12,5 @@
 <script setup>
 import { ref } from 'vue'
 
-const supportedPlatforms = ref(["X/Twitter", "Facebook (in aanbouw)", "TikTok (in aanbouw)"])
+const supportedPlatforms = ref(["X/Twitter", "Instagram (bèta)", "TikTok (bèta)"])
 </script>

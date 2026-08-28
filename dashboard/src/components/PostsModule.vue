@@ -9,7 +9,7 @@
         :class="post.contains_misinformation ? 'border-l-4 border-amethyst-500 pl-3' : ''"
       >
         <PostHeader :post="post" />
-        <PostEmbed :platform="post.platform" :url="post.url" />
+        <PostEmbed :platform="post.platform" :url="post.url" :content="post.content" />
       </div>
       <button
         v-if="hasMore"

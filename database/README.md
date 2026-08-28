@@ -12,7 +12,7 @@ Stores social media accounts that are being tracked.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | serial | Primary key |
-| `platform` | enum | twitter, tiktok, or facebook |
+| `platform` | enum | twitter, tiktok, facebook, or instagram |
 | `username` | varchar | Handle/username (unique per platform) |
 | `account_url` | text | URL to the account profile (optional) |
 | `display_name` | varchar | Display name (optional) |
@@ -25,7 +25,7 @@ Stores all scraped posts across platforms.
 |--------|------|-------------|
 | `id` | serial | Primary key |
 | `url` | text | URL of the post (unique per platform) |
-| `platform` | enum | twitter, tiktok, or facebook |
+| `platform` | enum | twitter, tiktok, facebook, or instagram |
 | `account_id` | integer | Foreign key to accounts |
 | `content` | text | Post text content |
 | `post_type` | enum | original, reply, repost, or quote |
@@ -146,6 +146,7 @@ GRANT UPDATE, DELETE ON posts, frames TO anon;
 
 ## Notes
 
+- Adding a new platform to an existing database: the `platform` and `post_type` columns are Postgres enums, so new values need a migration rather than re-running `schema.sql`. For example, to add Instagram: `ALTER TYPE platform ADD VALUE 'instagram';` (run outside a transaction block; Postgres requires this for `ADD VALUE`).
 - The `platform_data` JSONB column can store any platform-specific fields (e.g., video duration for TikTok, hashtags, media URLs)
 - Posts are uniquely identified by `(platform, url)` to prevent duplicates
 - Accounts are uniquely identified by `(platform, username)`

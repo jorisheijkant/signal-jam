@@ -1,7 +1,7 @@
 -- Signal Jam Database Schema
 
 -- Platforms enum
-CREATE TYPE platform AS ENUM ('twitter', 'tiktok', 'facebook');
+CREATE TYPE platform AS ENUM ('twitter', 'tiktok', 'facebook', 'instagram');
 
 -- Post type: original, reply, retweet/share, quote
 CREATE TYPE post_type AS ENUM ('original', 'reply', 'repost', 'quote');

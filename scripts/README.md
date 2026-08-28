@@ -1,5 +1,5 @@
 # Scripts
-This folder contains the scraping scripts that collect social media posts and push them to the database. Currently only X (Twitter) is supported.
+This folder contains the scraping scripts that collect social media posts and push them to the database. X (Twitter), TikTok, and Instagram are supported; Facebook is not (Zeeschuimer, the browser extension these scripts rely on to capture posts, has no Facebook module).
 
 ## Setup
 
@@ -10,11 +10,11 @@ cp .env.example .env
 # fill in your database credentials
 ```
 
-Set up your source data files (see [Source data](#source-data) below):
+Set up your source data files for the platform(s) you want to scrape (see [Source data](#source-data) below), e.g. for X:
 ```bash
-cp source_data/x_users_to_scrape.example.json source_data/x_users_to_scrape.json
-cp source_data/terms_to_scrape.example.json source_data/terms_to_scrape.json
-cp source_data/filter_terms.example.json source_data/filter_terms.json
+cp source_data/x/x_users_to_scrape.example.json source_data/x/x_users_to_scrape.json
+cp source_data/x/terms_to_scrape.example.json source_data/x/terms_to_scrape.json
+cp source_data/x/filter_terms.example.json source_data/x/filter_terms.json
 ```
 
 Then edit each file with your actual values before running.
@@ -23,17 +23,23 @@ Then edit each file with your actual values before running.
 
 ```bash
 python scrape_x.py
+python scrape_tiktok.py
+python scrape_instagram.py
 ```
 
 ## Source data
 
-Configuration for what to scrape lives in `source_data/`. These files are gitignored — only the `.example.json` versions are committed. Copy them and fill in your own values.
+Configuration for what to scrape lives in `source_data/<platform>/`. These files are gitignored — only the `.example.json` versions are committed. Copy them and fill in your own values.
 
 | File | Description |
 |---|---|
 | `x_users_to_scrape.json` | List of X accounts to scrape, as `{name, url}` objects |
 | `terms_to_scrape.json` | List of search terms used for X term searches |
-| `filter_terms.json` | Word filter applied to user scrape results (see below) |
+| `tiktok_users_to_scrape.json` | List of TikTok accounts to scrape, as `{name, url}` objects |
+| `tiktok_terms_to_scrape.json` | List of search terms used for TikTok term searches |
+| `instagram_users_to_scrape.json` | List of Instagram accounts to scrape, as `{name, url}` objects |
+| `instagram_terms_to_scrape.json` | List of keywords used for Instagram's `/explore/search/keyword/` search page |
+| `filter_terms.json` | Word filter applied to user scrape results (see below), one per platform folder |
 
 ### Word filter
 Posts from **user scrapes** are only pushed to the database if their content contains at least one word from `filter_terms.json`. This keeps the dataset focused on relevant content when scraping accounts that post about many topics.

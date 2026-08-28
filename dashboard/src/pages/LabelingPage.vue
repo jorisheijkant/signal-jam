@@ -22,7 +22,7 @@
         <PostHeader :post="post" />
 
         <div class="post-embed mb-4">
-          <PostEmbed :platform="post.platform" :url="post.url" />
+          <PostEmbed :platform="post.platform" :url="post.url" :content="post.content" />
         </div>
 
         <PostLabelForm :post="post" :frames="frames" @submit="submitPost(post)" />
