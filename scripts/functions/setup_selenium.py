@@ -62,6 +62,7 @@ def _build_firefox_driver(local_profile_dir, headless):
     firefox_options = Options()
     if headless:
         firefox_options.add_argument("-headless")
+    firefox_options.web_socket_url = True  # enables BiDi, needed to pin the stealth script across navigations
     firefox_profile = webdriver.FirefoxProfile(str(local_profile_dir))
     firefox_profile.set_preference("security.fileuri.strict_origin_policy", False)
     firefox_profile.update_preferences()
@@ -76,8 +77,9 @@ def _build_firefox_driver(local_profile_dir, headless):
 
 def _install_zeeschuimer(driver):
     driver.install_addon(str(SCRAPING_TOOLS_DIR / 'zeeschuimer-1.14.2.xpi'), temporary=True)  # TODO: update version when upgrading
-    driver.execute_script((SCRAPING_TOOLS_DIR / 'stealth.js').read_text())
-    print("Successfully installed Zeeschuimer and loaded the stealth script...")
+    # Pinned (not execute_script'd) so it re-runs before every page load, not just the current one.
+    driver.script.pin((SCRAPING_TOOLS_DIR / 'stealth.js').read_text())
+    print("Successfully installed Zeeschuimer and pinned the stealth script...")
 
     driver.set_page_load_timeout(45)
     driver.set_script_timeout(120)

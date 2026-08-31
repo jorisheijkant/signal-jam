@@ -3,16 +3,22 @@
     <blockquote class="tiktok-embed" cite="" :data-video-id="videoId" ref="tiktokRef">
       <a :href="url">Tiktok laden...</a>
     </blockquote>
+    <EmbedCaption :content="content" />
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import EmbedCaption from './EmbedCaption.vue'
 
 const props = defineProps({
   url: {
     type: String,
     required: true
+  },
+  content: {
+    type: String,
+    default: null
   }
 })
 

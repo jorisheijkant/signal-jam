@@ -1,6 +1,6 @@
 <template>
   <TwitterEmbed v-if="platform === 'twitter'" :url="url" />
-  <TiktokEmbed v-else-if="platform === 'tiktok'" :url="url" />
+  <TiktokEmbed v-else-if="platform === 'tiktok'" :url="url" :content="content" />
   <FacebookEmbed v-else-if="platform === 'facebook'" :url="url" />
   <InstagramEmbed v-else-if="platform === 'instagram'" :url="url" :content="content" />
 </template>

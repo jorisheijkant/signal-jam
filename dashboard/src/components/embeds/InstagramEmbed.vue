@@ -8,12 +8,13 @@
     >
       <a :href="url">Loading Instagram post...</a>
     </blockquote>
-    <p v-if="content" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mt-2">{{ content }}</p>
+    <EmbedCaption :content="content" />
   </div>
 </template>
 
 <script setup>
 import { onMounted, watch } from 'vue'
+import EmbedCaption from './EmbedCaption.vue'
 
 const props = defineProps({
   url: {

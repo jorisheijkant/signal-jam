@@ -16,7 +16,7 @@ from functions.utils.pick_rotating_sample import pick_rotating_sample
 
 TIKTOK_PLATFORM_STATS_ID = 'tiktokcom'
 TIKTOK_SEARCH_URL_BASE = "https://www.tiktok.com/search?q="
-SELENIUM_HEADLESS = True
+SELENIUM_HEADLESS = False
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
