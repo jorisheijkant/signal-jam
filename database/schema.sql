@@ -67,6 +67,26 @@ CREATE TABLE summaries (
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- AI fact-check suggestions (moderators still own contains_misinformation)
+CREATE TABLE ai_fact_checks (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    likely_disinformation BOOLEAN NOT NULL,
+    reasoning TEXT NOT NULL,
+    checked_at TIMESTAMPTZ DEFAULT NOW(),
+
+    UNIQUE(post_id, provider)
+);
+
+-- Sources backing an AI fact-check suggestion
+CREATE TABLE ai_fact_check_sources (
+    id SERIAL PRIMARY KEY,
+    ai_fact_check_id INTEGER NOT NULL REFERENCES ai_fact_checks(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    link TEXT NOT NULL
+);
+
 -- Indexes
 CREATE INDEX idx_posts_platform ON posts(platform);
 CREATE INDEX idx_posts_frame_id ON posts(frame_id);
@@ -76,3 +96,5 @@ CREATE INDEX idx_posts_post_type ON posts(post_type);
 CREATE INDEX idx_posts_is_checked ON posts(is_checked);
 CREATE INDEX idx_posts_is_relevant ON posts(is_relevant);
 CREATE INDEX idx_accounts_platform ON accounts(platform);
+CREATE INDEX idx_ai_fact_checks_post_id ON ai_fact_checks(post_id);
+CREATE INDEX idx_ai_fact_check_sources_fact_check_id ON ai_fact_check_sources(ai_fact_check_id);

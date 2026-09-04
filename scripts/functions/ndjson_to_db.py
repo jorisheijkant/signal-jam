@@ -1,6 +1,7 @@
 import time
 
 from functions.db_operations import upsert_account, insert_post, get_post_id_by_url
+from functions.fact_checking import fact_check_post
 from functions.llm import detect_language_with_llm
 
 REQUIRED_LANGUAGE_ISO = 'nl'
@@ -15,7 +16,7 @@ def detect_post_language(llm, post):
         return None
 
 
-def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None):
+def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fact_check=False):
     """Parse an ndjson capture with parse_ndjson and insert the resulting posts into the database."""
     try:
         results = parse_ndjson(ndjson_path)
@@ -45,6 +46,9 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None):
             post_id = insert_post(conn, post)
             status = 'inserted' if post_id else 'already exists'
             print(f"  [{status}] {account.username} — {post.url}")
+
+            if post_id and run_fact_check:
+                fact_check_post(conn, post_id, post.content)
 
         print("Now taking a 2 minute rest to avoid rate limiting")
         time.sleep(RATE_LIMIT_REST_SECONDS)

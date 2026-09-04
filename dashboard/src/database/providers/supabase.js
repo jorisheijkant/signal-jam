@@ -24,7 +24,7 @@ async function getPostsPerDay(days = 20) {
 async function getPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
-    .select('*, account:accounts(*)')
+    .select('*, account:accounts(*), ai_fact_checks(likely_disinformation, reasoning, provider, checked_at, ai_fact_check_sources(title, link))')
     .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query

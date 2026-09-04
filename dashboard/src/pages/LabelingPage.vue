@@ -25,6 +25,8 @@
           <PostEmbed :platform="post.platform" :url="post.url" :content="post.content" />
         </div>
 
+        <AiFactCheckSuggestion :fact-check="post.ai_fact_checks?.[0]" />
+
         <PostLabelForm :post="post" :frames="frames" @submit="submitPost(post)" />
       </div>
 
@@ -46,6 +48,7 @@ import { addFormFields } from '../utils/postForm.js'
 import PostHeader from '../components/PostHeader.vue'
 import PostEmbed from '../components/embeds/PostEmbed.vue'
 import PostLabelForm from '../components/PostLabelForm.vue'
+import AiFactCheckSuggestion from '../components/AiFactCheckSuggestion.vue'
 
 const PAGE_SIZE = 10
 const posts = ref([])

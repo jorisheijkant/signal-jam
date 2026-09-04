@@ -4,7 +4,7 @@ This folder contains the PostgreSQL schema for Signal Jam. You can use this sche
 
 ## Schema Overview
 
-The database consists of four tables:
+The database consists of six tables:
 
 ### `accounts`
 Stores social media accounts that are being tracked.
@@ -41,6 +41,32 @@ Stores all scraped posts across platforms.
 | `notes` | text | Free-text notes on the post (optional) |
 | `frame_id` | integer | Foreign key to frames (optional) |
 | `platform_data` | jsonb | Platform-specific metadata |
+
+### `ai_fact_checks`
+AI-generated fact-check suggestions for a post. A moderator reviews these but they never overwrite `posts.contains_misinformation` directly.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | serial | Primary key |
+| `post_id` | integer | Foreign key to posts |
+| `provider` | varchar | Which AI/model produced this check (e.g. `claude-sonnet-5`) |
+| `likely_disinformation` | boolean | The AI's verdict |
+| `reasoning` | text | Concise explanation for the verdict |
+| `checked_at` | timestamptz | When the check was run |
+
+Unique per `(post_id, provider)` — re-running a check for the same provider overwrites (upserts) the previous suggestion rather than accumulating history.
+
+### `ai_fact_check_sources`
+Sources backing an `ai_fact_checks` suggestion (e.g. EUvsDisinfo articles, web search results).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | serial | Primary key |
+| `ai_fact_check_id` | integer | Foreign key to ai_fact_checks |
+| `title` | text | Source title |
+| `link` | text | Source URL |
+
+Deleted automatically (`ON DELETE CASCADE`) when its parent `ai_fact_checks` row is replaced or removed.
 
 ### `frames`
 Central misinformation themes that posts can be tagged with.
@@ -140,8 +166,9 @@ The `PGRST_DB_ANON_ROLE` must be a PostgreSQL role that has `SELECT` on the tabl
 
 ```sql
 CREATE ROLE anon NOLOGIN;
-GRANT SELECT ON accounts, posts, summaries, frames TO anon;
+GRANT SELECT ON accounts, posts, summaries, frames, ai_fact_checks, ai_fact_check_sources TO anon;
 GRANT UPDATE, DELETE ON posts, frames TO anon;
+GRANT INSERT, UPDATE, DELETE ON ai_fact_checks, ai_fact_check_sources TO anon;
 ```
 
 ## Notes

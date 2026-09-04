@@ -16,6 +16,7 @@ from functions.utils.pick_rotating_sample import pick_rotating_sample
 INSTAGRAM_PLATFORM_STATS_ID = 'instagramcom'
 INSTAGRAM_SEARCH_URL_BASE = "https://www.instagram.com/explore/search/keyword/?q="
 SELENIUM_HEADLESS = True
+ENABLE_AI_FACT_CHECK = False
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
@@ -56,14 +57,20 @@ def main():
             print(f"Written ndjson at {user_ndjson_path}")
 
             if user_ndjson_path:
-                ndjson_to_db(db.conn, llm, user_ndjson_path, ndjson_to_instagram_posts, filter_terms=filter_terms)
+                ndjson_to_db(
+                    db.conn, llm, user_ndjson_path, ndjson_to_instagram_posts,
+                    filter_terms=filter_terms, run_fact_check=ENABLE_AI_FACT_CHECK,
+                )
 
         for term_index, term in enumerate(terms_to_scrape, 1):
             print(f"Now searching posts containing term {term_index}/{len(terms_to_scrape)}: {term}")
             term_url = f"{INSTAGRAM_SEARCH_URL_BASE}{term}"
             term_ndjson_path = scrape_url(driver, term_url, term, INSTAGRAM_PLATFORM_STATS_ID)
             if term_ndjson_path:
-                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_instagram_posts)
+                ndjson_to_db(
+                    db.conn, llm, term_ndjson_path, ndjson_to_instagram_posts,
+                    run_fact_check=ENABLE_AI_FACT_CHECK,
+                )
     finally:
         driver.quit()
         print("Browser closed. All done.")

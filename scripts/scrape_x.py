@@ -18,6 +18,7 @@ X_SEARCH_URL_BASE = "https://x.com/search?q="
 X_SEARCH_URL_AFFIX = "%20lang%3Anl&src=typed_query"
 X_PROFILE_URL_SUFFIX = "/all"
 SELENIUM_HEADLESS = True
+ENABLE_AI_FACT_CHECK = True
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
@@ -58,14 +59,20 @@ def main():
             print(f"Written ndjson at {user_ndjson_path}")
 
             if user_ndjson_path:
-                ndjson_to_db(db.conn, llm, user_ndjson_path, ndjson_to_tweets, filter_terms=filter_terms)
+                ndjson_to_db(
+                    db.conn, llm, user_ndjson_path, ndjson_to_tweets,
+                    filter_terms=filter_terms, run_fact_check=ENABLE_AI_FACT_CHECK,
+                )
 
         for term_index, term in enumerate(terms_to_scrape, 1):
             print(f"Now searching tweets containing term {term_index}/{len(terms_to_scrape)}: {term}")
             term_url = f"{X_SEARCH_URL_BASE}{term}{X_SEARCH_URL_AFFIX}"
             term_ndjson_path = scrape_url(driver, term_url, term, X_PLATFORM_STATS_ID)
             if term_ndjson_path:
-                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_tweets)
+                ndjson_to_db(
+                    db.conn, llm, term_ndjson_path, ndjson_to_tweets,
+                    run_fact_check=ENABLE_AI_FACT_CHECK,
+                )
     finally:
         driver.quit()
         print("Browser closed. All done.")
