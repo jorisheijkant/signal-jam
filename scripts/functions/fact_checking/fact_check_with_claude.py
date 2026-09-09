@@ -3,6 +3,7 @@ import os
 from claude_agent_sdk import (
     AssistantMessage,
     ClaudeAgentOptions,
+    HookMatcher,
     ResultMessage,
     ServerToolUseBlock,
     TextBlock,
@@ -10,6 +11,8 @@ from claude_agent_sdk import (
     query,
 )
 from dotenv import load_dotenv
+
+from .trim_euvsdisinfo_output import trim_euvsdisinfo_output
 
 full_prompt = """You will see a social media post in Dutch. Use the EUvsDisinfo MCP to check whether EUvsDisinfo has done a fact check on this (the site has fact checks in English). Search for specific events and information first, but if that does not give results, feel free to take a bit of a broader view and look for fact checks about the main topic of the post. You can also use the web search tool to find more information on the topic.
 
@@ -71,7 +74,16 @@ async def fact_check_with_claude(claim=""):
             "mcp__euvsdisinfo__cases",
             "mcp__euvsdisinfo__narratives",
         ],
-        max_turns=10,
+        disallowed_tools=[
+        "Bash", "Read", "Write", "Edit", "Glob", "Grep",
+        "NotebookEdit", "WebFetch", "TodoWrite", "Task",
+        "BashOutput", "KillShell", "Skill", "SlashCommand",
+        "ExitPlanMode",
+        ],
+        hooks={
+            "PostToolUse": [HookMatcher(hooks=[trim_euvsdisinfo_output])],
+        },
+        max_turns=6,
         output_format={"type": "json_schema", "schema": FACT_CHECK_RESULT_SCHEMA},
     )
 
@@ -86,6 +98,8 @@ async def fact_check_with_claude(claim=""):
                     print(block.text, end="", flush=True)
         elif isinstance(message, ResultMessage):
             fact_check_result = message.structured_output
+            if message.usage:
+                print(f" Usage of tokens: {message.usage}")
 
     return fact_check_result
 

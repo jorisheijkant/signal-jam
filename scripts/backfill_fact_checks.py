@@ -1,4 +1,7 @@
-"""Temporary one-off script: AI fact-check the newest N posts already in the database.
+"""AI fact-check the newest N posts already in the database that don't have one yet.
+
+Run this on a schedule (see scripts/README.md) rather than fact-checking inline
+during scraping, to keep scrape runs fast and to control fact-check API spend.
 
 Usage: python backfill_fact_checks.py
 """

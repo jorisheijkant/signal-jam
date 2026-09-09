@@ -18,7 +18,7 @@ X_SEARCH_URL_BASE = "https://x.com/search?q="
 X_SEARCH_URL_AFFIX = "%20lang%3Anl&src=typed_query"
 X_PROFILE_URL_SUFFIX = "/all"
 SELENIUM_HEADLESS = True
-ENABLE_AI_FACT_CHECK = True
+ENABLE_AI_FACT_CHECK = False
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
