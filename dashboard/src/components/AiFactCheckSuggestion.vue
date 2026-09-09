@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="factCheck"
-    class="mb-4 p-3 border text-sm max-w-xl"
+    class="mb-4 p-3 border text-sm max-w-md"
     :class="factCheck.likely_disinformation ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-gray-50'"
   >
     <span
@@ -26,7 +26,7 @@
     </table>
   </div>
 
-  <div v-else class="mb-4 p-3 border border-gray-200 bg-gray-50 text-sm text-gray-500 max-w-xl">
+  <div v-else class="mb-4 p-3 border border-gray-200 bg-gray-50 text-sm text-gray-500 max-w-md">
     Nog niet door AI gecheckt
   </div>
 </template>

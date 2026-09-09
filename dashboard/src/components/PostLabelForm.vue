@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex flex-col gap-3 max-w-md">
     <label class="flex items-center gap-2 text-sm text-red-600">
       <input type="checkbox" v-model="post._form.not_relevant" class="accent-red-600" />
       Is niet relevant

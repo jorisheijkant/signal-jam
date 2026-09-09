@@ -1,14 +1,22 @@
 <template>
-  <div class="twitter-embed" ref="containerRef"></div>
+  <div class="twitter-embed">
+    <div ref="containerRef"></div>
+    <EmbedCaption :content="content" />
+  </div>
 </template>
 
 <script setup>
 import { onMounted, ref, watch } from 'vue'
+import EmbedCaption from './EmbedCaption.vue'
 
 const props = defineProps({
   url: {
     type: String,
     required: true
+  },
+  content: {
+    type: String,
+    default: null
   }
 })
 

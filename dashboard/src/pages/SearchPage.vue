@@ -56,7 +56,7 @@
       <div
         v-for="post in posts"
         :key="post.id"
-        class="border border-amethyst-200 p-4 md:p-6"
+        class="border border-amethyst-200 p-4 md:p-6 max-w-lg"
       >
         <div class="mb-3">
           <span v-if="post.is_checked" class="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
