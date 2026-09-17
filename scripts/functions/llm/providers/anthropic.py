@@ -18,4 +18,5 @@ class AnthropicProvider(LLMProvider):
             max_tokens=1024,
             messages=[{'role': 'user', 'content': prompt}],
         )
-        return response.content[0].text.strip()
+        text_blocks = [block.text for block in response.content if block.type == 'text']
+        return ''.join(text_blocks).strip()
