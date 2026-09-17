@@ -1,5 +1,6 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { groupPostsByDay, groupPostsByAccount } from '../utils.js'
+import { fetchAllRows } from './fetchAllRows.js'
 
 const url = import.meta.env.VITE_POSTGREST_URL
 const anonKey = import.meta.env.VITE_POSTGREST_ANON_KEY
@@ -11,13 +12,14 @@ async function getPostsPerDay(days = 20) {
   const since = new Date()
   since.setDate(since.getDate() - days)
 
-  const { data, error } = await client
+  const buildQuery = () => client
     .from('posts')
     .select('posted_at')
     .eq('is_relevant', true)
     .gte('posted_at', since.toISOString())
     .order('posted_at', { ascending: true })
 
+  const { data, error } = await fetchAllRows(buildQuery)
   if (error) return { data: null, error }
   return { data: groupPostsByDay(data, days), error: null }
 }
@@ -51,13 +53,16 @@ async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
 }
 
 async function getMostActiveAccounts(limit = 6, startDate = null) {
-  let query = client
-    .from('posts')
-    .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
-    .eq('is_relevant', true)
-  if (startDate) query = query.gte('posted_at', startDate)
-  const { data, error } = await query
+  const buildQuery = () => {
+    let query = client
+      .from('posts')
+      .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
+      .eq('is_relevant', true)
+    if (startDate) query = query.gte('posted_at', startDate)
+    return query
+  }
 
+  const { data, error } = await fetchAllRows(buildQuery)
   if (error) return { data: null, error }
   return { data: groupPostsByAccount(data, limit), error: null }
 }
@@ -129,7 +134,7 @@ async function getActiveFrames(days = 30) {
   const since = new Date()
   since.setDate(since.getDate() - days)
 
-  const { data, error } = await client
+  const buildQuery = () => client
     .from('posts')
     .select('frame_id, frame:frames(id, name)')
     .not('frame_id', 'is', null)
@@ -137,6 +142,7 @@ async function getActiveFrames(days = 30) {
     .eq('is_checked', true)
     .gte('posted_at', since.toISOString())
 
+  const { data, error } = await fetchAllRows(buildQuery)
   if (error) return { data: null, error }
 
   const counts = {}

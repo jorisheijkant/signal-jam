@@ -17,7 +17,7 @@
           >
             @{{ account.username }}
           </a>
-          <p class="text-sm text-gray-500">{{ account.platform }}</p>
+          <p class="text-sm text-gray-500">{{ formatPlatformLabel(account.platform) }}</p>
         </div>
         <div class="account-activity text-right">
           <span class="text-sm font-semibold text-gray-600">{{ account.misinfoCount }} <span class="text-gray-400">({{ account.totalCount }})</span></span>
@@ -30,6 +30,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getMostActiveAccounts } from '../database'
+import { formatPlatformLabel } from '../utils/platformLabels.js'
 
 const accounts = ref([])
 

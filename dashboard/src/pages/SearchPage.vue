@@ -94,17 +94,14 @@ import { useRoute, useRouter } from 'vue-router'
 import { searchPosts, getFrames, updatePost, deletePost } from '../database'
 import { session } from '../auth'
 import { addFormFields } from '../utils/postForm.js'
+import { formatPlatformLabel } from '../utils/platformLabels.js'
 import PostHeader from '../components/PostHeader.vue'
 import PostEmbed from '../components/embeds/PostEmbed.vue'
 import PostLabelForm from '../components/PostLabelForm.vue'
 
 const PAGE_SIZE = 20
-const PLATFORMS = [
-  { value: 'twitter', label: 'Twitter' },
-  { value: 'tiktok', label: 'TikTok' },
-  { value: 'facebook', label: 'Facebook' },
-  { value: 'instagram', label: 'Instagram' },
-]
+const PLATFORMS = ['twitter', 'tiktok', 'facebook', 'instagram']
+  .map(value => ({ value, label: formatPlatformLabel(value) }))
 const route = useRoute()
 const router = useRouter()
 
