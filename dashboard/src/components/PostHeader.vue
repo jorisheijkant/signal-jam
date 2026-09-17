@@ -16,6 +16,13 @@
       ↩ reply
     </span>
     <span
+      v-if="post.reposted_by?.length"
+      class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded"
+      :title="repostedByLabel"
+    >
+      ↻ {{ post.reposted_by.length }}
+    </span>
+    <span
       v-if="post.contains_misinformation"
       class="inline-block px-2 py-0.5 text-xs font-medium bg-amethyst-600 text-white rounded-full"
     >
@@ -25,9 +32,17 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   post: { type: Object, required: true },
 })
+
+const repostedByLabel = computed(() =>
+  (props.post.reposted_by || [])
+    .map(repost => `@${repost.account?.username || 'onbekend'}`)
+    .join(', ')
+)
 
 function formatDate(ts) {
   if (!ts) return ''

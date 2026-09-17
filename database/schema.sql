@@ -46,6 +46,18 @@ CREATE TABLE posts (
     UNIQUE(platform, url)
 );
 
+-- Who reposted a post, and when (plain retweets/shares — no own content, so no own label).
+-- Quote posts still get their own row in `posts` (post_type = 'quote') since they add commentary.
+CREATE TABLE post_reposts (
+    id SERIAL PRIMARY KEY,
+    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    account_id INTEGER NOT NULL REFERENCES accounts(id),
+    reposted_at TIMESTAMPTZ NOT NULL,
+    url TEXT,
+
+    UNIQUE(post_id, account_id)
+);
+
 -- Frames table (central misinformation themes)
 CREATE TABLE frames (
     id SERIAL PRIMARY KEY,
@@ -96,5 +108,7 @@ CREATE INDEX idx_posts_post_type ON posts(post_type);
 CREATE INDEX idx_posts_is_checked ON posts(is_checked);
 CREATE INDEX idx_posts_is_relevant ON posts(is_relevant);
 CREATE INDEX idx_accounts_platform ON accounts(platform);
+CREATE INDEX idx_post_reposts_post_id ON post_reposts(post_id);
+CREATE INDEX idx_post_reposts_account_id ON post_reposts(account_id);
 CREATE INDEX idx_ai_fact_checks_post_id ON ai_fact_checks(post_id);
 CREATE INDEX idx_ai_fact_check_sources_fact_check_id ON ai_fact_check_sources(ai_fact_check_id);

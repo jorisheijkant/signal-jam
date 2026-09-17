@@ -91,7 +91,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { searchPosts, getFrames, updatePost, updateSiblingReposts, deletePost } from '../database'
+import { searchPosts, getFrames, updatePost, deletePost } from '../database'
 import { session } from '../auth'
 import { addFormFields } from '../utils/postForm.js'
 import PostHeader from '../components/PostHeader.vue'
@@ -193,10 +193,6 @@ async function submitPost(post) {
       notes: post._form.notes,
     }
     ;({ error } = await updatePost(post.id, fields))
-
-    if (!error && (post.parent_post_id || post.post_type === 'original')) {
-      await updateSiblingReposts(post, fields)
-    }
   }
 
   post._saving = false

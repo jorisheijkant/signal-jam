@@ -43,7 +43,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts, updatePost, updateSiblingReposts, deletePost, getUnlabeledCount, getFrames } from '../database'
+import { getPosts, updatePost, deletePost, getUnlabeledCount, getFrames } from '../database'
 import { addFormFields } from '../utils/postForm.js'
 import PostHeader from '../components/PostHeader.vue'
 import PostEmbed from '../components/embeds/PostEmbed.vue'
@@ -83,10 +83,6 @@ async function submitPost(post) {
       notes: post._form.notes,
     }
     ;({ error } = await updatePost(post.id, fields))
-
-    if (!error && (post.parent_post_id || post.post_type === 'original')) {
-      await updateSiblingReposts(post, fields)
-    }
   }
 
   post._saving = false

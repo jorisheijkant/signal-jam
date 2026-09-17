@@ -1,6 +1,6 @@
 import time
 
-from functions.db_operations import upsert_account, insert_post, get_post_id_by_url
+from functions.db_operations import upsert_account, insert_post, get_post_id_by_url, record_repost
 from functions.fact_checking import fact_check_post
 from functions.llm import detect_language_with_llm
 
@@ -14,6 +14,17 @@ def detect_post_language(llm, post):
     except Exception as e:
         print(f"  [language check failed] {post.url} — {e}")
         return None
+
+
+def handle_repost(conn, account, post):
+    """Record that account reposted the original post, without creating a duplicate posts row."""
+    original_post_id = get_post_id_by_url(conn, post.platform, post.parent_url)
+    if not original_post_id:
+        print(f"  [repost skipped] {account.username} — original post {post.parent_url} not yet in DB")
+        return
+
+    record_repost(conn, original_post_id, post.account_id, post.posted_at, post.url)
+    print(f"  [repost recorded] {account.username} reposted post {original_post_id}")
 
 
 def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fact_check=False):
@@ -35,6 +46,10 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fa
                 continue
 
             post.account_id = upsert_account(conn, account)
+
+            if post.post_type == 'repost':
+                handle_repost(conn, account, post)
+                continue
 
             if post.parent_url and post.parent_post_id is None:
                 post.parent_post_id = get_post_id_by_url(conn, post.platform, post.parent_url)

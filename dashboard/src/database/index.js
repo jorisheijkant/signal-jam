@@ -25,7 +25,6 @@ export const getPostCounts = db.getPostCounts
 export const getPostsPerDay = db.getPostsPerDay
 export const getLastScrapedAt = db.getLastScrapedAt
 export const updatePost = db.updatePost
-export const updateSiblingReposts = db.updateSiblingReposts
 export const deletePost = db.deletePost
 export const getSummaries = db.getSummaries
 export const getFrames = db.getFrames

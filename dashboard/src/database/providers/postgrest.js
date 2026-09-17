@@ -25,7 +25,7 @@ async function getPostsPerDay(days = 20) {
 async function getPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
-    .select('*, account:accounts(*), ai_fact_checks(likely_disinformation, reasoning, provider, checked_at, ai_fact_check_sources(title, link))')
+    .select('*, account:accounts(*), ai_fact_checks(likely_disinformation, reasoning, provider, checked_at, ai_fact_check_sources(title, link)), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
     .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
@@ -39,7 +39,7 @@ async function getPosts(limit = 10, offset = 0, startDate = null) {
 async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
-    .select('*, account:accounts(*)')
+    .select('*, account:accounts(*), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
     .eq('is_relevant', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
@@ -98,19 +98,6 @@ async function updatePost(id, fields) {
     .select()
 
   return { data: response.data, error: response.error }
-}
-
-async function updateSiblingReposts(post, fields) {
-  const rootId = post.parent_post_id ?? post.id
-
-  const { data, error } = await client
-    .from('posts')
-    .update(fields)
-    .eq('parent_post_id', rootId)
-    .neq('id', post.id)
-    .select('id')
-
-  return { data, error }
 }
 
 async function deletePost(id) {
@@ -202,14 +189,14 @@ async function getAccountIdsMatchingUsername(term) {
   return data.map(account => account.id)
 }
 
-async function getPostIdsByAccountIds(accountIds) {
+async function getPostIdsRepostedByAccounts(accountIds) {
   if (accountIds.length === 0) return []
   const { data, error } = await client
-    .from('posts')
-    .select('id')
+    .from('post_reposts')
+    .select('post_id')
     .in('account_id', accountIds)
   if (error || !data) return []
-  return data.map(post => post.id)
+  return [...new Set(data.map(row => row.post_id))]
 }
 
 async function buildTermFilter(term) {
@@ -220,9 +207,9 @@ async function buildTermFilter(term) {
 
   orFilters.push(`account_id.in.(${matchingAccountIds.join(',')})`)
 
-  const repostedPostIds = await getPostIdsByAccountIds(matchingAccountIds)
+  const repostedPostIds = await getPostIdsRepostedByAccounts(matchingAccountIds)
   if (repostedPostIds.length > 0) {
-    orFilters.push(`parent_post_id.in.(${repostedPostIds.join(',')})`)
+    orFilters.push(`id.in.(${repostedPostIds.join(',')})`)
   }
 
   return orFilters.join(',')
@@ -231,7 +218,7 @@ async function buildTermFilter(term) {
 async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null, endDate = null, platform = null) {
   let query = client
     .from('posts')
-    .select('*, account:accounts(*), frame:frames(id, name)')
+    .select('*, account:accounts(*), frame:frames(id, name), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
     .eq('is_relevant', true)
 
   if (term) query = query.or(await buildTermFilter(term))
@@ -256,7 +243,6 @@ export default {
   getUnlabeledCount,
   getLastScrapedAt,
   updatePost,
-  updateSiblingReposts,
   deletePost,
   getSummaries,
   getFrames,
