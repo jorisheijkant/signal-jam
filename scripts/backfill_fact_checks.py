@@ -6,10 +6,17 @@ during scraping, to keep scrape runs fast and to control fact-check API spend.
 Usage: python backfill_fact_checks.py
 """
 
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / '.env')
+
+# claude_agent_sdk authenticates via the Claude Code CLI session by default, but
+# switches to API-key billing if it sees this in the environment. Keep it out so
+# this script never bills against ANTHROPIC_API_KEY, even though the shared
+# .env defines it (summarize_weeks.py needs it for its own Anthropic client).
+os.environ.pop('ANTHROPIC_API_KEY', None)
 
 from db import Database
 from functions.fact_checking import MODEL, fact_check_post

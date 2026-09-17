@@ -7,9 +7,17 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 
 from db import Database
 from functions.llm import get_llm_provider
+from functions.source_desk import load_articles_for_week
+
+# Also summarize source-desk's Russian propaganda channel articles for each week.
+# Requires SOURCE_DESK_ARTICLES_DIR to point at source-desk's exported article JSON files.
+GENERATE_PROPAGANDA_SUMMARY = True
 
 PROMPT_PATH = Path(__file__).parent / 'prompts' / 'weekly_summary.txt'
+PROPAGANDA_PROMPT_PATH = Path(__file__).parent / 'prompts' / 'weekly_propaganda_summary.txt'
 LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'ollama')
+ARTICLES_DIR = Path(os.getenv('SOURCE_DESK_ARTICLES_DIR', ''))
+MAX_ARTICLE_CHARS = 600
 
 
 def get_monday(d: date) -> date:
@@ -42,10 +50,11 @@ def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
     return weeks
 
 
-def get_existing_summary_weeks(conn) -> set[date]:
+def get_summary_status_by_week(conn) -> dict[date, bool]:
+    """Map week_start to whether that week's propaganda_channels_content is already filled in."""
     with conn.cursor() as cur:
-        cur.execute("SELECT week_start FROM summaries")
-        return {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT week_start, propaganda_channels_content IS NOT NULL FROM summaries")
+        return dict(cur.fetchall())
 
 
 def get_posts_for_week(conn, week_start: date, week_end: date) -> list[dict]:
@@ -77,50 +86,65 @@ def format_posts_for_prompt(posts: list[dict]) -> str:
     return '\n'.join(lines)
 
 
-def insert_summary(conn, week_start: date, week_end: date, content: str, provider: str):
+def format_articles_for_prompt(articles: list[dict]) -> str:
+    lines = []
+    for article in articles:
+        date_str = article['published_at'][:10]
+        text = (article.get('summary') or article.get('content') or '')[:MAX_ARTICLE_CHARS]
+        lines.append(f"[{date_str}] {article['source']} — {article['title']}: {text}")
+    return '\n'.join(lines)
+
+
+def generate_propaganda_summary(llm, prompt_template: str, week_start: date, week_end: date) -> str | None:
+    """Summarize source-desk's Russian propaganda channel articles for the week, or None if there's nothing to summarize."""
+    articles = load_articles_for_week(ARTICLES_DIR, week_start, week_end)
+    if not articles:
+        return None
+
+    prompt = prompt_template.format(
+        week_start=week_start.strftime('%d-%m-%Y'),
+        week_end=week_end.strftime('%d-%m-%Y'),
+        article_count=len(articles),
+        articles=format_articles_for_prompt(articles),
+    )
+    return llm.complete(prompt)
+
+
+def insert_summary(conn, week_start: date, week_end: date, content: str, provider: str, propaganda_content: str | None = None):
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO summaries (week_start, week_end, content, llm_provider)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO summaries (week_start, week_end, content, propaganda_channels_content, llm_provider)
+            VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (week_start) DO UPDATE
               SET content = EXCLUDED.content,
+                  propaganda_channels_content = COALESCE(EXCLUDED.propaganda_channels_content, summaries.propaganda_channels_content),
                   llm_provider = EXCLUDED.llm_provider,
                   generated_at = NOW()
             """,
-            (week_start, week_end, content, provider),
+            (week_start, week_end, content, propaganda_content, provider),
         )
     conn.commit()
 
 
-def main():
-    prompt_template = PROMPT_PATH.read_text(encoding='utf-8')
+def update_propaganda_summary(conn, week_start: date, content: str):
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE summaries SET propaganda_channels_content = %s WHERE week_start = %s",
+            (content, week_start),
+        )
+    conn.commit()
 
-    print(f"Using LLM provider: {LLM_PROVIDER}")
-    llm = get_llm_provider(LLM_PROVIDER)
 
-    db = Database()
-
-    all_weeks = get_all_weeks_with_posts(db.conn)
-    existing = get_existing_summary_weeks(db.conn)
-    pending = [(ws, we) for ws, we in all_weeks if ws not in existing]
-
-    if not pending:
-        print("All weeks already have a summary. Nothing to do.")
-        return
-
-    print(f"Found {len(pending)} week(s) without a summary.")
-
-    for week_start, week_end in pending:
-        print(f"\nGenerating summary for {week_start} – {week_end}...")
-
-        posts = get_posts_for_week(db.conn, week_start, week_end)
+def process_week(conn, llm, prompt_template, propaganda_prompt_template, week_start: date, week_end: date, has_summary: bool, needs_propaganda_summary: bool):
+    content = None
+    if not has_summary:
+        posts = get_posts_for_week(conn, week_start, week_end)
         if not posts:
             print("  No posts found, skipping.")
-            continue
+            return
 
         print(f"  {len(posts)} posts found.")
-
         posts_text = format_posts_for_prompt(posts)
         prompt = prompt_template.format(
             week_start=week_start.strftime('%d-%m-%Y'),
@@ -128,10 +152,62 @@ def main():
             post_count=len(posts),
             posts=posts_text,
         )
+        content = llm.complete(prompt)
 
-        summary = llm.complete(prompt)
-        insert_summary(db.conn, week_start, week_end, summary, LLM_PROVIDER)
-        print(f"  Summary saved ({len(summary)} characters).")
+    propaganda_content = None
+    if needs_propaganda_summary:
+        propaganda_content = generate_propaganda_summary(llm, propaganda_prompt_template, week_start, week_end)
+        if propaganda_content:
+            print(f"  Propaganda summary generated ({len(propaganda_content)} characters).")
+        else:
+            print("  No propaganda articles found for this week.")
+
+    if content is not None:
+        insert_summary(conn, week_start, week_end, content, LLM_PROVIDER, propaganda_content)
+        print(f"  Summary saved ({len(content)} characters).")
+    elif propaganda_content is not None:
+        update_propaganda_summary(conn, week_start, propaganda_content)
+        print("  Propaganda summary saved.")
+
+
+def main():
+    if GENERATE_PROPAGANDA_SUMMARY and not ARTICLES_DIR.is_dir():
+        print(f"GENERATE_PROPAGANDA_SUMMARY is on but SOURCE_DESK_ARTICLES_DIR is not a directory: {ARTICLES_DIR}")
+        return
+
+    prompt_template = PROMPT_PATH.read_text(encoding='utf-8')
+    propaganda_prompt_template = PROPAGANDA_PROMPT_PATH.read_text(encoding='utf-8') if GENERATE_PROPAGANDA_SUMMARY else None
+
+    print(f"Using LLM provider: {LLM_PROVIDER}")
+    llm = get_llm_provider(LLM_PROVIDER)
+
+    db = Database()
+
+    all_weeks = get_all_weeks_with_posts(db.conn)
+    summary_status = get_summary_status_by_week(db.conn)
+
+    pending = [
+        (ws, we) for ws, we in all_weeks
+        if ws not in summary_status or (GENERATE_PROPAGANDA_SUMMARY and not summary_status[ws])
+    ]
+
+    if not pending:
+        print("All weeks already have a summary. Nothing to do.")
+        return
+
+    print(f"Found {len(pending)} week(s) needing work.")
+
+    for week_start, week_end in pending:
+        has_summary = week_start in summary_status
+        needs_propaganda_summary = GENERATE_PROPAGANDA_SUMMARY and not summary_status.get(week_start, False)
+
+        print(f"\nProcessing {week_start} – {week_end}...")
+
+        try:
+            process_week(db.conn, llm, prompt_template, propaganda_prompt_template, week_start, week_end, has_summary, needs_propaganda_summary)
+        except Exception as e:
+            print(f"  [failed] {week_start} – {week_end}: {e}")
+            db.conn.rollback()
 
     print("\nDone.")
 

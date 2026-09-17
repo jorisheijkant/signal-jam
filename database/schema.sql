@@ -75,6 +75,7 @@ CREATE TABLE summaries (
     week_start DATE NOT NULL UNIQUE,  -- always a Monday
     week_end DATE NOT NULL,           -- always the Sunday of that same week
     content TEXT NOT NULL,
+    propaganda_channels_content TEXT,  -- summary of Russian propaganda channel coverage, see source-desk
     llm_provider VARCHAR(50),
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
