@@ -136,7 +136,7 @@ async function getActiveFrames(days = 30) {
 
   const buildQuery = () => client
     .from('posts')
-    .select('frame_id, frame:frames(id, name)')
+    .select('frame_id, frame:frames(id, name, description)')
     .not('frame_id', 'is', null)
     .eq('is_relevant', true)
     .eq('is_checked', true)
@@ -148,7 +148,7 @@ async function getActiveFrames(days = 30) {
   const counts = {}
   for (const post of data) {
     const id = post.frame_id
-    if (!counts[id]) counts[id] = { id, name: post.frame.name, count: 0 }
+    if (!counts[id]) counts[id] = { id, name: post.frame.name, description: post.frame.description, count: 0 }
     counts[id].count++
   }
 

@@ -20,8 +20,8 @@ ARTICLES_DIR = Path(os.getenv('SOURCE_DESK_ARTICLES_DIR', ''))
 MAX_ARTICLE_CHARS = 600
 
 
-def get_monday(d: date) -> date:
-    return d - timedelta(days=d.weekday())
+def get_monday(day: date) -> date:
+    return day - timedelta(days=day.weekday())
 
 
 def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
@@ -51,7 +51,12 @@ def get_all_weeks_with_posts(conn) -> list[tuple[date, date]]:
 
 
 def get_summary_status_by_week(conn) -> dict[date, bool]:
-    """Map week_start to whether that week's propaganda_channels_content is already filled in."""
+    """Map week_start to whether that week's propaganda summary has already been checked.
+
+    propaganda_channels_content is NULL until a check has run, then either holds the
+    generated summary or an empty string if the check found no articles for that week.
+    Either way, NOT NULL means "already checked" and the week should not be re-queued.
+    """
     with conn.cursor() as cur:
         cur.execute("SELECT week_start, propaganda_channels_content IS NOT NULL FROM summaries")
         return dict(cur.fetchall())
@@ -160,7 +165,8 @@ def process_week(conn, llm, prompt_template, propaganda_prompt_template, week_st
         if propaganda_content:
             print(f"  Propaganda summary generated ({len(propaganda_content)} characters).")
         else:
-            print("  No propaganda articles found for this week.")
+            print("  No propaganda articles found for this week, marking as checked.")
+            propaganda_content = ''
 
     if content is not None:
         insert_summary(conn, week_start, week_end, content, LLM_PROVIDER, propaganda_content)
@@ -187,8 +193,9 @@ def main():
     summary_status = get_summary_status_by_week(db.conn)
 
     pending = [
-        (ws, we) for ws, we in all_weeks
-        if ws not in summary_status or (GENERATE_PROPAGANDA_SUMMARY and not summary_status[ws])
+        (week_start, week_end) for week_start, week_end in all_weeks
+        if week_start not in summary_status
+        or (GENERATE_PROPAGANDA_SUMMARY and not summary_status[week_start])
     ]
 
     if not pending:
