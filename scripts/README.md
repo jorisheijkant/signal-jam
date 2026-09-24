@@ -41,12 +41,14 @@ Configuration for what to scrape lives in `source_data/<platform>/`. These files
 | `instagram_terms_to_scrape.json` | List of keywords used for Instagram's `/explore/search/keyword/` search page |
 | `filter_terms.json` | Word filter applied to user scrape results (see below), one per platform folder |
 
-### Word filter
+### Word filter / other filtering
 Posts from **user scrapes** are only pushed to the database if their content contains at least one word from `filter_terms.json`. This keeps the dataset focused on relevant content when scraping accounts that post about many topics.
 
 Posts from **term scrapes** are not filtered — they are already targeted by the search term itself.
 
 The filter is case-insensitive.
+
+On X, replies are not scraped by default, to prevent overly long discussion from landing in the database in full.
 
 ## Cloud deployment
 

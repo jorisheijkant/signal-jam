@@ -34,6 +34,10 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fa
         print(f"Parsed {len(results)} posts, inserting into database...")
 
         for account, post in results:
+            if post.post_type == 'reply':
+                print(f"  [filtered] {account.username} — reply, skipping")
+                continue
+
             if filter_terms:
                 content = (post.content or '').lower()
                 if not any(term.lower() in content for term in filter_terms):
