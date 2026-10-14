@@ -4,7 +4,7 @@
     <p class="text-sm text-gray-400 mb-4">Aantal posts met misinformatie (en totaal aantal posts in de database).</p>
     <div class="accounts-list space-y-3">
       <div
-        v-for="account in accounts"
+        v-for="account in visibleAccounts"
         :key="account.id"
         class="account-item flex items-center justify-between border-b border-gray-200 pb-3 last:border-b-0"
       >
@@ -24,18 +24,36 @@
         </div>
       </div>
     </div>
+    <button
+      v-if="hasMoreAccounts"
+      class="mt-4 text-sm font-medium text-gray-600 hover:text-blue-600"
+      @click="showMoreAccounts"
+    >
+      Laad meer
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getMostActiveAccounts } from '../database'
 import { formatPlatformLabel } from '../utils/platformLabels.js'
 
+const PAGE_SIZE = 5
+const MAX_ACCOUNTS = 30
+
 const accounts = ref([])
+const visibleCount = ref(PAGE_SIZE)
+
+const visibleAccounts = computed(() => accounts.value.slice(0, visibleCount.value))
+const hasMoreAccounts = computed(() => visibleCount.value < accounts.value.length)
+
+const showMoreAccounts = () => {
+  visibleCount.value += PAGE_SIZE
+}
 
 onMounted(async () => {
-  const { data, error } = await getMostActiveAccounts()
+  const { data, error } = await getMostActiveAccounts(MAX_ACCOUNTS)
   if (error) {
     console.error('Failed to fetch most active accounts:', error)
     return
