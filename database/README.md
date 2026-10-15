@@ -4,7 +4,7 @@ This folder contains the PostgreSQL schema for Signal Jam. You can use this sche
 
 ## Schema Overview
 
-The database consists of six tables:
+The database consists of eight tables:
 
 ### `accounts`
 Stores social media accounts that are being tracked.
@@ -77,6 +77,21 @@ Central misinformation themes that posts can be tagged with.
 | `name` | varchar | Unique frame name |
 | `description` | text | Description of the frame (optional) |
 | `created_at` | timestamptz | When the frame was created |
+
+### `articles`
+Articles scraped from Russian state media (RT, TASS, Lenta, Gazeta) and propaganda sites (Pravda NL). These are not social media posts, so they live outside of `posts`/`accounts`. The weekly propaganda summary in `summaries` is generated from them.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `url` | text | Primary key, the URL of the article |
+| `title` | text | Article title |
+| `source` | text | Name of the outlet (e.g. `Tass`) |
+| `author` | text | Author (optional) |
+| `language` | varchar | Language code (optional) |
+| `summary` | text | Summary as published in the feed (optional) |
+| `content` | text | Full article text (optional) |
+| `published_at` | timestamptz | When the article was published |
+| `scraped_at` | timestamptz | When we scraped the article |
 
 ### `summaries`
 Weekly AI-generated summaries of tracked content.
@@ -166,7 +181,7 @@ The `PGRST_DB_ANON_ROLE` must be a PostgreSQL role that has `SELECT` on the tabl
 
 ```sql
 CREATE ROLE anon NOLOGIN;
-GRANT SELECT ON accounts, posts, summaries, frames, ai_fact_checks, ai_fact_check_sources TO anon;
+GRANT SELECT ON accounts, posts, summaries, frames, ai_fact_checks, ai_fact_check_sources, articles TO anon;
 GRANT UPDATE, DELETE ON posts, frames TO anon;
 GRANT INSERT, UPDATE, DELETE ON ai_fact_checks, ai_fact_check_sources TO anon;
 ```

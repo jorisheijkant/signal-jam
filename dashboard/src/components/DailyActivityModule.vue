@@ -131,7 +131,7 @@ onMounted(async () => {
       tooltip.style.opacity = '0'
     })
     .on('click', function(event, d) {
-      router.push({ path: '/zoeken', query: { startDate: d.date, endDate: d.date } })
+      router.push({ path: '/posts', query: { startDate: d.date, endDate: d.date } })
     })
 })
 </script>

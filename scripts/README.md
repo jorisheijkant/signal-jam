@@ -27,6 +27,18 @@ python scrape_tiktok.py
 python scrape_instagram.py
 ```
 
+## Articles (Russian news outlets)
+
+Besides social media, the scripts gather articles from Russian state media and propaganda sites into the `articles` table. `summarize_weeks.py` uses them for the weekly propaganda summary, and the dashboard shows them on the Artikelen page.
+
+| Script | What it does |
+|--------|--------------|
+| `scrape_russian_rss.py` | Reads the RSS feeds in `source_data/articles/russian_feeds.json` and scrapes the full text of new articles |
+| `scrape_pravda.py` | Scrapes the Pravda sites in `source_data/articles/pravda_sources.json` |
+| `migrate_source_desk_articles.py` | One-off copy of the old Source Desk database (`SOURCE_DESK_DATABASE_URL` constant in the script) into `DATABASE_URL`. Run with `--dry-run` first; re-running is safe |
+
+Copy the `*.example.json` files in `source_data/articles/` to the same name without `.example` to configure them. `search_terms.json` decides which articles end up in the weekly summary. Set `DNS_RESOLVER` / `DNS_OVER_HTTPS_URL` in `.env` if your ISP blocks the Russian domains.
+
 ## Source data
 
 Configuration for what to scrape lives in `source_data/<platform>/`. These files are gitignored — only the `.example.json` versions are committed. Copy them and fill in your own values.

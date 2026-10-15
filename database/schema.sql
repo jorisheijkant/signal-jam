@@ -75,7 +75,7 @@ CREATE TABLE summaries (
     week_start DATE NOT NULL UNIQUE,  -- always a Monday
     week_end DATE NOT NULL,           -- always the Sunday of that same week
     content TEXT NOT NULL,
-    propaganda_channels_content TEXT,  -- summary of Russian propaganda channel coverage, see source-desk
+    propaganda_channels_content TEXT,  -- summary of Russian propaganda channel coverage, generated from articles
     llm_provider VARCHAR(50),
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -100,6 +100,19 @@ CREATE TABLE ai_fact_check_sources (
     link TEXT NOT NULL
 );
 
+-- Articles table (Russian state media and propaganda sites)
+CREATE TABLE articles (
+    url          TEXT PRIMARY KEY,
+    title        TEXT NOT NULL,
+    source       TEXT NOT NULL,
+    author       TEXT,
+    language     VARCHAR(10),
+    summary      TEXT,
+    content      TEXT,
+    published_at TIMESTAMPTZ NOT NULL,
+    scraped_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX idx_posts_platform ON posts(platform);
 CREATE INDEX idx_posts_frame_id ON posts(frame_id);
@@ -113,3 +126,5 @@ CREATE INDEX idx_post_reposts_post_id ON post_reposts(post_id);
 CREATE INDEX idx_post_reposts_account_id ON post_reposts(account_id);
 CREATE INDEX idx_ai_fact_checks_post_id ON ai_fact_checks(post_id);
 CREATE INDEX idx_ai_fact_check_sources_fact_check_id ON ai_fact_check_sources(ai_fact_check_id);
+CREATE INDEX idx_articles_published_at ON articles(published_at);
+CREATE INDEX idx_articles_source ON articles(source);

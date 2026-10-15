@@ -32,3 +32,15 @@ export function groupPostsByAccount(posts, limit) {
     .filter(a => a.misinfoCount > 0)
     .slice(0, limit)
 }
+
+export function escapeOrFilterValue(value) {
+  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+}
+
+const ARTICLE_TEXT_COLUMNS = ['title', 'summary', 'content']
+
+export function buildArticleTermsFilter(terms) {
+  return terms
+    .flatMap(term => ARTICLE_TEXT_COLUMNS.map(column => `${column}.ilike.${escapeOrFilterValue(`%${term}%`)}`))
+    .join(',')
+}

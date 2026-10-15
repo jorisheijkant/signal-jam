@@ -7,16 +7,14 @@ load_dotenv(Path(__file__).parent.parent / '.env')
 
 from db import Database
 from functions.llm import get_llm_provider
-from functions.source_desk import load_articles_for_week
+from functions.articles import fetch_matching_articles, load_json_file
 
-# Also summarize source-desk's Russian propaganda channel articles for each week.
-# Requires SOURCE_DESK_ARTICLES_DIR to point at source-desk's exported article JSON files.
 GENERATE_PROPAGANDA_SUMMARY = True
 
 PROMPT_PATH = Path(__file__).parent / 'prompts' / 'weekly_summary.txt'
 PROPAGANDA_PROMPT_PATH = Path(__file__).parent / 'prompts' / 'weekly_propaganda_summary.txt'
 LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'ollama')
-ARTICLES_DIR = Path(os.getenv('SOURCE_DESK_ARTICLES_DIR', ''))
+SEARCH_TERMS_PATH = Path(__file__).parent / 'source_data' / 'articles' / 'search_terms.json'
 MAX_ARTICLE_CHARS = 600
 
 
@@ -94,15 +92,15 @@ def format_posts_for_prompt(posts: list[dict]) -> str:
 def format_articles_for_prompt(articles: list[dict]) -> str:
     lines = []
     for article in articles:
-        date_str = article['published_at'][:10]
+        date_str = article['published_at'].strftime('%Y-%m-%d')
         text = (article.get('summary') or article.get('content') or '')[:MAX_ARTICLE_CHARS]
         lines.append(f"[{date_str}] {article['source']} — {article['title']}: {text}")
     return '\n'.join(lines)
 
 
-def generate_propaganda_summary(llm, prompt_template: str, week_start: date, week_end: date) -> str | None:
-    """Summarize source-desk's Russian propaganda channel articles for the week, or None if there's nothing to summarize."""
-    articles = load_articles_for_week(ARTICLES_DIR, week_start, week_end)
+def generate_propaganda_summary(conn, llm, prompt_template: str, week_start: date, week_end: date) -> str | None:
+    """Summarize the week's Russian propaganda channel articles that mention the search terms, or None if there are none."""
+    articles = fetch_matching_articles(conn, load_json_file(SEARCH_TERMS_PATH), week_start, week_end)
     if not articles:
         return None
 
@@ -161,7 +159,7 @@ def process_week(conn, llm, prompt_template, propaganda_prompt_template, week_st
 
     propaganda_content = None
     if needs_propaganda_summary:
-        propaganda_content = generate_propaganda_summary(llm, propaganda_prompt_template, week_start, week_end)
+        propaganda_content = generate_propaganda_summary(conn, llm, propaganda_prompt_template, week_start, week_end)
         if propaganda_content:
             print(f"  Propaganda summary generated ({len(propaganda_content)} characters).")
         else:
@@ -177,10 +175,6 @@ def process_week(conn, llm, prompt_template, propaganda_prompt_template, week_st
 
 
 def main():
-    if GENERATE_PROPAGANDA_SUMMARY and not ARTICLES_DIR.is_dir():
-        print(f"GENERATE_PROPAGANDA_SUMMARY is on but SOURCE_DESK_ARTICLES_DIR is not a directory: {ARTICLES_DIR}")
-        return
-
     prompt_template = PROMPT_PATH.read_text(encoding='utf-8')
     propaganda_prompt_template = PROPAGANDA_PROMPT_PATH.read_text(encoding='utf-8') if GENERATE_PROPAGANDA_SUMMARY else None
 

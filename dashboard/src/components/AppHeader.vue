@@ -3,7 +3,8 @@
     <h1 class="text-4xl font-bold">🛰️ Signal Jam</h1>
     <nav class="flex items-center flex-wrap gap-3 md:gap-4">
       <router-link to="/" class="text-sm text-amethyst-700 hover:text-amethyst-900">Dashboard</router-link>
-      <router-link to="/zoeken" class="text-sm text-amethyst-700 hover:text-amethyst-900">Zoeken</router-link>
+      <router-link to="/posts" class="text-sm text-amethyst-700 hover:text-amethyst-900">Posts</router-link>
+      <router-link to="/artikelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Artikelen</router-link>
       <router-link to="/samenvattingen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Samenvattingen</router-link>
       <router-link to="/over" class="text-sm text-amethyst-700 hover:text-amethyst-900">Over</router-link>
       <template v-if="session">

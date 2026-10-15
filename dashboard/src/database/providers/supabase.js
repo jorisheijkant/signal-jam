@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { groupPostsByDay, groupPostsByAccount } from '../utils.js'
+import { groupPostsByDay, groupPostsByAccount, buildArticleTermsFilter } from '../utils.js'
 import { fetchAllRows } from './fetchAllRows.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -218,7 +218,7 @@ async function buildTermFilter(term) {
   return orFilters.join(',')
 }
 
-async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = null, endDate = null, platform = null) {
+async function searchPosts({ term, frameId, platform, startDate, endDate, containsMisinformation }, limit = 20, offset = 0) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*), frame:frames(id, name), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
@@ -227,6 +227,7 @@ async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = nu
   if (term) query = query.or(await buildTermFilter(term))
   if (frameId) query = query.eq('frame_id', frameId)
   if (platform) query = query.eq('platform', platform)
+  if (containsMisinformation) query = query.eq('contains_misinformation', true)
   if (startDate) query = query.gte('posted_at', startDate)
   if (endDate) query = query.lte('posted_at', `${endDate}T23:59:59`)
 
@@ -235,6 +236,23 @@ async function searchPosts(term, frameId, limit = 20, offset = 0, startDate = nu
     .range(offset, offset + limit - 1)
 
   return { data, error, count }
+}
+
+async function searchArticles({ term, relatedTerms, startDate, endDate }, limit = 20, offset = 0) {
+  let query = client
+    .from('articles')
+    .select('url, title, source, language, summary, content, published_at')
+
+  if (term) query = query.or(buildArticleTermsFilter([term]))
+  if (relatedTerms) query = query.or(buildArticleTermsFilter(relatedTerms))
+  if (startDate) query = query.gte('published_at', startDate)
+  if (endDate) query = query.lte('published_at', `${endDate}T23:59:59`)
+
+  const { data, error } = await query
+    .order('published_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  return { data, error }
 }
 
 export default {
@@ -254,4 +272,5 @@ export default {
   deleteFrame,
   getActiveFrames,
   searchPosts,
+  searchArticles,
 }
