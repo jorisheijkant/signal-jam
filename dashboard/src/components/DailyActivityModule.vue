@@ -1,7 +1,7 @@
 <template>
   <div class="module daily-activity-module bg-white border border-1 border-amethyst-200 p-4 md:p-8 w-full">
     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Dagelijkse activiteit</h2>
-    <p class="text-sm mb-4 text-gray-400">Het aantal posts per dag met misinformatie.</p>
+    <p class="text-sm mb-4 text-gray-400">Het aantal posts per dag met misinformatie. Let op: 'lege' dagen kunnen ook ontstaan door een labelingsachterstand (we checken alles met de hand).</p>
     <div ref="chartContainer" class="chart-container relative"></div>
   </div>
 </template>
