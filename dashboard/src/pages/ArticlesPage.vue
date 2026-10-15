@@ -1,4 +1,5 @@
 <template>
+  <PasswordGate>
   <main class="flex-grow">
     <div class="max-w-3xl mx-auto flex flex-col gap-2 mb-6">
       <h2 class="text-2xl font-semibold text-gray-800">Artikelen</h2>
@@ -82,11 +83,13 @@
       </button>
     </div>
   </main>
+  </PasswordGate>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { searchArticles } from '../database'
+import PasswordGate from '../components/PasswordGate.vue'
 import { NETHERLANDS_SEARCH_TERMS } from '../utils/netherlandsSearchTerms.js'
 import { ARTICLE_SOURCE_NAMES, getArticleSourceStyle } from '../utils/articleSources.js'
 import { formatArticleDate, getArticleExcerpt } from '../utils/articles.js'
