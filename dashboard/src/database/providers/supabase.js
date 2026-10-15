@@ -218,7 +218,7 @@ async function buildTermFilter(term) {
   return orFilters.join(',')
 }
 
-async function searchPosts({ term, frameId, platform, startDate, endDate, containsMisinformation }, limit = 20, offset = 0) {
+async function searchPosts({ term, frameId, platform, startDate, endDate, containsMisinformation, isChecked }, limit = 20, offset = 0) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*), frame:frames(id, name), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
@@ -228,6 +228,7 @@ async function searchPosts({ term, frameId, platform, startDate, endDate, contai
   if (frameId) query = query.eq('frame_id', frameId)
   if (platform) query = query.eq('platform', platform)
   if (containsMisinformation) query = query.eq('contains_misinformation', true)
+  if (isChecked) query = query.eq('is_checked', true)
   if (startDate) query = query.gte('posted_at', startDate)
   if (endDate) query = query.lte('posted_at', `${endDate}T23:59:59`)
 

@@ -2,7 +2,7 @@
   <main class="flex-grow">
     <div class="max-w-3xl mx-auto flex flex-col gap-2 mb-6">
       <h2 class="text-2xl font-semibold text-gray-800">Posts</h2>
-      <p class="text-sm">Posts van sociale media over Nederland waarvan we vermoeden dat ze onderdeel zijn van pro-Russische beïnvloeding. Standaard zie je alleen de posts waarvan we hebben vastgesteld dat ze desinformatie bevatten. Zoek je op een term, dan zoek je door alle posts.</p>
+      <p class="text-sm">Posts van sociale media over Nederland waarvan we vermoeden dat ze onderdeel zijn van pro-Russische beïnvloeding. Standaard zie je alleen de posts waarvan we hebben vastgesteld dat ze desinformatie bevatten. Zoek je op een term, dan zoek je door alle gelabelde posts.</p>
     </div>
 
     <form @submit.prevent="submitSearch" class="max-w-3xl mx-auto flex flex-wrap gap-3 mb-6">
@@ -145,6 +145,7 @@ async function fetchPage(offset) {
       startDate: startDate.value || null,
       endDate: endDate.value || null,
       containsMisinformation: onlyMisinformation.value,
+      isChecked: true,
     },
     PAGE_SIZE,
     offset
