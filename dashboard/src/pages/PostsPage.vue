@@ -68,12 +68,6 @@
           >
             {{ formatPlatformLabel(post.platform) }}
           </span>
-          <span v-if="post.is_checked" class="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
-            Al gelabeld
-          </span>
-          <span v-else class="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
-            Nog labelen
-          </span>
         </div>
 
         <PostHeader :post="post" />

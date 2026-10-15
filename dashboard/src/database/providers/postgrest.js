@@ -16,6 +16,7 @@ async function getPostsPerDay(days = 20) {
     .from('posts')
     .select('posted_at')
     .eq('is_relevant', true)
+    .eq('contains_misinformation', true)
     .gte('posted_at', since.toISOString())
     .order('posted_at', { ascending: true })
 
