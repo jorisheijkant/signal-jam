@@ -1,5 +1,5 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
-import { groupPostsByDay, groupPostsByAccount, buildArticleTermsFilter } from '../utils.js'
+import { groupPostsByDay, groupPostsByAccount, buildArticleTermsFilter, filterUnreviewedThemePosts } from '../utils.js'
 import { fetchAllRows } from './fetchAllRows.js'
 
 const url = import.meta.env.VITE_POSTGREST_URL
@@ -14,9 +14,9 @@ async function getPostsPerDay(days = 20) {
 
   const buildQuery = () => client
     .from('posts')
-    .select('posted_at')
+    .select('posted_at, account:accounts!inner(is_approved)')
     .eq('is_relevant', true)
-    .eq('contains_misinformation', true)
+    .eq('account.is_approved', true)
     .gte('posted_at', since.toISOString())
     .order('posted_at', { ascending: true })
 
@@ -25,28 +25,45 @@ async function getPostsPerDay(days = 20) {
   return { data: groupPostsByDay(data, days), error: null }
 }
 
-async function getPosts(limit = 10, offset = 0, startDate = null) {
-  let query = client
-    .from('posts')
-    .select('*, account:accounts(*), ai_fact_checks(likely_disinformation, reasoning, provider, checked_at, ai_fact_check_sources(title, link)), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
-    .eq('is_relevant', true)
-  if (startDate) query = query.gte('posted_at', startDate)
-  const { data, error } = await query
-    .order('is_checked', { ascending: true })
-    .order('posted_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
+async function getAccountReviewQueue() {
+  const { data, error } = await client
+    .from('account_review_queue')
+    .select('*')
+    .order('confirmed_count', { ascending: false })
+    .order('unreviewed_count', { ascending: false })
   return { data, error }
 }
 
-async function getCheckedPosts(limit = 10, offset = 0, startDate = null) {
+async function getUnreviewedPostsForAccount(accountId, startDate = null) {
+  let query = filterUnreviewedThemePosts(
+    client.from('posts').select('*, account:accounts(*)').eq('account_id', accountId)
+  )
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error } = await query.order('posted_at', { ascending: false })
+  return { data, error }
+}
+
+async function getUnreviewedPostsFromOtherAccounts(limit = 10, offset = 0, startDate = null) {
+  let query = filterUnreviewedThemePosts(
+    client.from('posts').select('*, account:accounts!inner(*)', { count: 'exact' })
+  )
+    .eq('account.is_watched', false)
+    .eq('account.is_approved', false)
+  if (startDate) query = query.gte('posted_at', startDate)
+  const { data, error, count } = await query
+    .order('posted_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+  return { data, error, count }
+}
+
+async function getLatestPosts(limit = 10, offset = 0, startDate = null) {
   let query = client
     .from('posts')
-    .select('*, account:accounts(*), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
+    .select('*, account:accounts!inner(*), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
     .eq('is_relevant', true)
+    .eq('account.is_approved', true)
   if (startDate) query = query.gte('posted_at', startDate)
   const { data, error } = await query
-    .eq('is_checked', true)
     .order('posted_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
@@ -57,8 +74,9 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
   const buildQuery = () => {
     let query = client
       .from('posts')
-      .select('account_id, contains_misinformation, account:accounts(id, username, platform, account_url)')
+      .select('account_id, account:accounts!inner(id, username, platform, account_url)')
       .eq('is_relevant', true)
+      .eq('account.is_approved', true)
     if (startDate) query = query.gte('posted_at', startDate)
     return query
   }
@@ -84,16 +102,6 @@ async function getLastScrapedAt() {
     .limit(1)
     .single()
   return { data, error }
-}
-
-async function getUnlabeledCount(startDate = null) {
-  let query = client
-    .from('posts')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_relevant', true)
-  if (startDate) query = query.gte('posted_at', startDate)
-  const { count, error } = await query.eq('is_checked', false)
-  return { count, error }
 }
 
 async function updatePost(id, fields) {
@@ -140,7 +148,6 @@ async function getActiveFrames(days = 30) {
     .select('frame_id, frame:frames(id, name, description)')
     .not('frame_id', 'is', null)
     .eq('is_relevant', true)
-    .eq('is_checked', true)
     .gte('posted_at', since.toISOString())
 
   const { data, error } = await fetchAllRows(buildQuery)
@@ -222,7 +229,7 @@ async function buildTermFilter(term) {
   return orFilters.join(',')
 }
 
-async function searchPosts({ term, frameId, platform, startDate, endDate, containsMisinformation, isChecked }, limit = 20, offset = 0) {
+async function searchPosts({ term, frameId, platform, startDate, endDate, onlyThemePosts }, limit = 20, offset = 0) {
   let query = client
     .from('posts')
     .select('*, account:accounts(*), frame:frames(id, name), reposted_by:post_reposts(reposted_at, account:accounts(id, username, display_name, account_url))')
@@ -231,8 +238,7 @@ async function searchPosts({ term, frameId, platform, startDate, endDate, contai
   if (term) query = query.or(await buildTermFilter(term))
   if (frameId) query = query.eq('frame_id', frameId)
   if (platform) query = query.eq('platform', platform)
-  if (containsMisinformation) query = query.eq('contains_misinformation', true)
-  if (isChecked) query = query.eq('is_checked', true)
+  if (onlyThemePosts) query = query.eq('relevant_for_signal_jam_theme', true)
   if (startDate) query = query.gte('posted_at', startDate)
   if (endDate) query = query.lte('posted_at', `${endDate}T23:59:59`)
 
@@ -262,11 +268,12 @@ async function searchArticles({ term, relatedTerms, startDate, endDate }, limit 
 
 export default {
   getPostCounts,
-  getPosts,
-  getCheckedPosts,
+  getAccountReviewQueue,
+  getUnreviewedPostsForAccount,
+  getUnreviewedPostsFromOtherAccounts,
+  getLatestPosts,
   getPostsPerDay,
   getMostActiveAccounts,
-  getUnlabeledCount,
   getLastScrapedAt,
   updatePost,
   deletePost,

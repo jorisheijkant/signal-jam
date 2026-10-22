@@ -51,14 +51,18 @@ Configuration for what to scrape lives in `source_data/<platform>/`. These files
 | `tiktok_terms_to_scrape.json` | List of search terms used for TikTok term searches |
 | `instagram_users_to_scrape.json` | List of Instagram accounts to scrape, as `{name, url}` objects |
 | `instagram_terms_to_scrape.json` | List of keywords used for Instagram's `/explore/search/keyword/` search page |
-| `filter_terms.json` | Word filter applied to user scrape results (see below), one per platform folder |
+| `filter_terms.json` | Theme word filter applied to user scrape results (see below), one per platform folder |
 
-### Word filter / other filtering
-Posts from **user scrapes** are only pushed to the database if their content contains at least one word from `filter_terms.json`. This keeps the dataset focused on relevant content when scraping accounts that post about many topics.
+### Theme flag and account approval
+Every post gets `relevant_for_signal_jam_theme`. It is true when the content contains at least one word from `filter_terms.json` (case-insensitive). Posts from **term scrapes** are always flagged, since they are already targeted by the search term itself.
 
-Posts from **term scrapes** are not filtered — they are already targeted by the search term itself.
+Whether a post is stored depends on the account:
+- **Approved accounts** (`accounts.is_approved`): all posts are stored, flagged or not.
+- **Candidate accounts** (new or not yet approved): only flagged posts are stored, so they can be labeled by hand.
 
-The filter is case-insensitive.
+At the start of each run the scraper marks every account listed in its `*_users_to_scrape.json` as watched (`accounts.is_watched`). Watched accounts that are not yet approved are shown as cards on the labeling page. Accounts found only through search terms are reviewed post by post.
+
+An account becomes approved automatically once it has three posts labeled `contains_misinformation` (database trigger, see `database/schema.sql`).
 
 On X, replies are not scraped by default, to prevent overly long discussion from landing in the database in full.
 

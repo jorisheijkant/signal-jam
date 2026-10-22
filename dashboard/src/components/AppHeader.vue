@@ -9,7 +9,7 @@
       <router-link to="/over" class="text-sm text-amethyst-700 hover:text-amethyst-900">Over</router-link>
       <template v-if="session">
         <router-link to="/labelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">
-          Labelen<span v-if="unlabeledCount !== null"> ({{ unlabeledCount }})</span>
+          Labelen
         </router-link>
         <router-link to="/frames" class="text-sm text-amethyst-700 hover:text-amethyst-900">Frames</router-link>
         <button
@@ -31,17 +31,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
 import { session, signOut } from '../auth'
 import { showAuthModal } from '../authModal'
-import { getUnlabeledCount } from '../database'
-
-const unlabeledCount = ref(null)
-
-onMounted(async () => {
-  const { count } = await getUnlabeledCount()
-  unlabeledCount.value = count
-})
 
 async function handleSignOut() {
   try {

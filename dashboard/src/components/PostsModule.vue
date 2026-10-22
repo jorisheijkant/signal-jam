@@ -1,6 +1,6 @@
 <template>
   <div class="module posts-module bg-white border border-1 border-amethyst-200 p-4 md:p-8 w-full">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Relevante posts</h2>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Laatste posts</h2>
     <div class="posts-feed overflow-y-auto max-h-[800px] space-y-4">
       <div
         v-for="post in posts"
@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getCheckedPosts } from '../database'
+import { getLatestPosts } from '../database'
 import PostHeader from './PostHeader.vue'
 import PostEmbed from './embeds/PostEmbed.vue'
 
@@ -33,7 +33,7 @@ const posts = ref([])
 const hasMore = ref(true)
 
 async function loadMore() {
-  const { data, error } = await getCheckedPosts(PAGE_SIZE, posts.value.length)
+  const { data, error } = await getLatestPosts(PAGE_SIZE, posts.value.length)
   if (error) {
     console.error('Failed to fetch posts:', error)
     return

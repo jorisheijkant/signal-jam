@@ -1,113 +1,95 @@
 <template>
   <main class="flex-grow">
-    <div class="flex items-baseline gap-3 mb-6">
-      <h2 class="text-2xl font-semibold text-gray-800">Posts labelen</h2>
-      <span v-if="unlabeledCount !== null" class="text-sm text-gray-500">{{ unlabeledCount }} nog te labelen</span>
+    <div class="max-w-3xl mx-auto mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-2">Posts labelen</h2>
+      <p class="text-sm">Een account wordt toegevoegd aan de database zodra drie van zijn posts als desinformatie zijn bevestigd. Hieronder staan de accounts die we volgen en nog niet genoeg bevestigde posts hebben, gevolgd door losse posts van andere accounts die via zoektermen binnenkwamen.</p>
     </div>
-    <div class="space-y-6">
-      <div
-        v-for="post in posts"
-        :key="post.id"
-        class="border border-amethyst-200 p-4 md:p-6 max-w-lg"
-      >
-        <div class="mb-3">
-          <span v-if="post.is_checked" class="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-500 rounded-full">
-            Al gelabeld
-          </span>
-          <span v-else class="inline-block px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
-            Nog labelen
-          </span>
-        </div>
 
-        <PostHeader :post="post" />
-
-        <div class="post-embed mb-4">
-          <PostEmbed :platform="post.platform" :url="post.url" :content="post.content" />
-        </div>
-
-        <AiFactCheckSuggestion :fact-check="post.ai_fact_checks?.[0]" />
-
-        <PostLabelForm :post="post" :frames="frames" @submit="submitPost(post)" />
+    <section class="max-w-3xl mx-auto mb-12">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        Gevolgde accounts
+        <span class="text-sm font-normal text-gray-500">{{ accounts.length }} te beoordelen</span>
+      </h3>
+      <div class="space-y-6">
+        <AccountReviewCard
+          v-for="account in accounts"
+          :key="account.account_id"
+          :account="account"
+          :frames="frames"
+        />
+        <p v-if="accounts.length === 0" class="text-sm text-gray-400">Geen accounts om te beoordelen.</p>
       </div>
+    </section>
 
-      <button
-        v-if="hasMore"
-        @click="loadMore"
-        class="w-full py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
-      >
-        Meer laden
-      </button>
-    </div>
+    <section class="max-w-3xl mx-auto">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">
+        Posts van andere accounts
+        <span v-if="otherPostsCount !== null" class="text-sm font-normal text-gray-500">{{ otherPostsCount }} te beoordelen</span>
+      </h3>
+      <div class="space-y-6">
+        <ReviewPostCard
+          v-for="post in otherPosts"
+          :key="post.id"
+          :post="post"
+          :frames="frames"
+          @reviewed="removeOtherPost(post)"
+        />
+        <button
+          v-if="hasMoreOtherPosts"
+          @click="loadMoreOtherPosts"
+          class="w-full py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 hover:bg-gray-50"
+        >
+          Meer laden
+        </button>
+        <p v-if="otherPosts.length === 0" class="text-sm text-gray-400">Geen posts om te beoordelen.</p>
+      </div>
+    </section>
   </main>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPosts, updatePost, deletePost, getUnlabeledCount, getFrames } from '../database'
-import { addFormFields } from '../utils/postForm.js'
-import PostHeader from '../components/PostHeader.vue'
-import PostEmbed from '../components/embeds/PostEmbed.vue'
-import PostLabelForm from '../components/PostLabelForm.vue'
-import AiFactCheckSuggestion from '../components/AiFactCheckSuggestion.vue'
+import { getAccountReviewQueue, getUnreviewedPostsFromOtherAccounts, getFrames } from '../database'
+import AccountReviewCard from '../components/AccountReviewCard.vue'
+import ReviewPostCard from '../components/ReviewPostCard.vue'
 
 const PAGE_SIZE = 10
-const posts = ref([])
-const frames = ref([])
-const hasMore = ref(true)
-const unlabeledCount = ref(null)
 
-async function loadMore() {
-  const { data, error } = await getPosts(PAGE_SIZE, posts.value.length)
+const frames = ref([])
+const accounts = ref([])
+const otherPosts = ref([])
+const otherPostsCount = ref(null)
+const hasMoreOtherPosts = ref(true)
+
+async function loadAccounts() {
+  const { data, error } = await getAccountReviewQueue()
+  if (error) {
+    console.error('Failed to fetch accounts to review:', error)
+    return
+  }
+  accounts.value = data
+}
+
+async function loadMoreOtherPosts() {
+  const { data, error, count } = await getUnreviewedPostsFromOtherAccounts(PAGE_SIZE, otherPosts.value.length)
   if (error) {
     console.error('Failed to fetch posts:', error)
     return
   }
-  posts.value.push(...data.map(addFormFields))
-  if (data.length < PAGE_SIZE) hasMore.value = false
+  otherPosts.value.push(...data)
+  otherPostsCount.value = count
+  if (data.length < PAGE_SIZE) hasMoreOtherPosts.value = false
 }
 
-async function submitPost(post) {
-  post._saving = true
-  post._saved = false
-  post._error = false
-
-  let error
-
-  if (post._form.not_relevant) {
-    ;({ error } = await deletePost(post.id))
-  } else {
-    const fields = {
-      is_checked: post._form.is_checked,
-      contains_misinformation: post._form.contains_misinformation,
-      frame_id: post._form.frame_id,
-      notes: post._form.notes,
-    }
-    ;({ error } = await updatePost(post.id, fields))
-  }
-
-  post._saving = false
-  if (error) {
-    post._error = true
-  } else if (post._form.not_relevant) {
-    posts.value = posts.value.filter(p => p.id !== post.id)
-    if (unlabeledCount.value !== null) unlabeledCount.value--
-  } else {
-    if (post._form.is_checked && !post.is_checked && unlabeledCount.value !== null) {
-      unlabeledCount.value--
-    }
-    post.is_checked = post._form.is_checked
-    post._saved = true
-    setTimeout(() => { post._saved = false }, 3000)
-  }
+function removeOtherPost(post) {
+  otherPosts.value = otherPosts.value.filter(candidate => candidate.id !== post.id)
+  otherPostsCount.value--
 }
 
 onMounted(async () => {
-  const [{ count }, { data: frameData }] = await Promise.all([
-    getUnlabeledCount(),
-    getFrames(),
-  ])
-  unlabeledCount.value = count
+  const { data: frameData } = await getFrames()
   frames.value = frameData || []
-  loadMore()
+  loadAccounts()
+  loadMoreOtherPosts()
 })
 </script>

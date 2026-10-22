@@ -4,7 +4,6 @@
     <p class="text-gray-600 mb-4">{{ lastModified }}</p>
     <div class="flex flex-col gap-1 text-sm text-gray-600">
       <p>Aantal posts in database: <span class="font-medium text-gray-800">{{ totalCount }}</span></p>
-      <p>Aantal posts met misinformatie: <span class="font-medium text-gray-800">{{ misinfoCount }}</span></p>
       <p>Versie: {{ appVersion }}</p>
     </div>
   </div>
@@ -16,7 +15,6 @@ import { getLastScrapedAt, getPostCounts } from '../database'
 
 const lastModified = ref('Laden...')
 const totalCount = ref('—')
-const misinfoCount = ref('—')
 
 const appVersion = __APP_VERSION__
 
@@ -40,7 +38,6 @@ onMounted(async () => {
 
   if (!counts.error) {
     totalCount.value = counts.total ?? '—'
-    misinfoCount.value = counts.misinfo ?? '—'
   }
 })
 </script>

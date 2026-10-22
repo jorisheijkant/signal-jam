@@ -1,0 +1,1 @@
+export const POSTS_NEEDED_FOR_APPROVAL = 3

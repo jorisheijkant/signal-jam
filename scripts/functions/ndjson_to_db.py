@@ -1,8 +1,8 @@
 import time
 
-from functions.db_operations import upsert_account, insert_post, get_post_id_by_url, record_repost
-from functions.fact_checking import fact_check_post
+from functions.db_operations import upsert_account, is_account_approved, insert_post, get_post_id_by_url, record_repost
 from functions.llm import detect_language_with_llm
+from functions.utils.matches_filter_terms import matches_filter_terms
 
 REQUIRED_LANGUAGE_ISO = 'nl'
 RATE_LIMIT_REST_SECONDS = 120
@@ -27,7 +27,7 @@ def handle_repost(conn, account, post):
     print(f"  [repost recorded] {account.username} reposted post {original_post_id}")
 
 
-def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fact_check=False):
+def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None):
     """Parse an ndjson capture with parse_ndjson and insert the resulting posts into the database."""
     try:
         results = parse_ndjson(ndjson_path)
@@ -38,11 +38,10 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fa
                 print(f"  [filtered] {account.username} — reply, skipping")
                 continue
 
-            if filter_terms:
-                content = (post.content or '').lower()
-                if not any(term.lower() in content for term in filter_terms):
-                    print(f"  [filtered] {account.username} — no filter term match, skipping")
-                    continue
+            post.relevant_for_signal_jam_theme = matches_filter_terms(post.content, filter_terms)
+            if not post.relevant_for_signal_jam_theme and not is_account_approved(conn, account):
+                print(f"  [filtered] {account.username} — no filter term match and account not approved, skipping")
+                continue
 
             post_language = detect_post_language(llm, post)
             if post_language != REQUIRED_LANGUAGE_ISO:
@@ -65,9 +64,6 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, run_fa
             post_id = insert_post(conn, post)
             status = 'inserted' if post_id else 'already exists'
             print(f"  [{status}] {account.username} — {post.url}")
-
-            if post_id and run_fact_check:
-                fact_check_post(conn, post_id, post.content)
 
         print("Now taking a 2 minute rest to avoid rate limiting")
         time.sleep(RATE_LIMIT_REST_SECONDS)

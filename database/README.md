@@ -16,6 +16,8 @@ Stores social media accounts that are being tracked.
 | `username` | varchar | Handle/username (unique per platform) |
 | `account_url` | text | URL to the account profile (optional) |
 | `display_name` | varchar | Display name (optional) |
+| `is_watched` | boolean | True when the account is listed in a `source_data/*/…_users_to_scrape.json` file. Synced by the scrapers at the start of each run |
+| `is_approved` | boolean | True once the account has 3 posts labeled as misinformation. Set by a trigger on `posts`, never by hand. Approved accounts get all their posts scraped; candidates only posts matching the theme filter terms |
 | `created_at` | timestamptz | When we added this account |
 
 ### `posts`
@@ -36,37 +38,21 @@ Stores all scraped posts across platforms.
 | `reposts` | integer | Retweet/share count |
 | `comments` | integer | Comment/reply count |
 | `is_checked` | boolean | Whether the post has been reviewed |
-| `is_relevant` | boolean | Whether the post is relevant to tracking |
+| `is_relevant` | boolean | Moderation flag: false when a moderator marked the post as not belonging in the database |
+| `relevant_for_signal_jam_theme` | boolean | Whether the post matches the theme filter terms (always true for term-search results) |
 | `contains_misinformation` | boolean | Whether misinformation was found |
 | `notes` | text | Free-text notes on the post (optional) |
 | `frame_id` | integer | Foreign key to frames (optional) |
 | `platform_data` | jsonb | Platform-specific metadata |
 
-### `ai_fact_checks`
-AI-generated fact-check suggestions for a post. A moderator reviews these but they never overwrite `posts.contains_misinformation` directly.
+### `account_review_queue` (view)
+Watched accounts that still need labeling, used by the labeling page. One row per account that is not yet approved, has unreviewed theme posts, and has enough own posts (confirmed + unreviewed) to reach the three needed for approval. Reposts are not counted, since they have no label of their own.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | serial | Primary key |
-| `post_id` | integer | Foreign key to posts |
-| `provider` | varchar | Which AI/model produced this check (e.g. `claude-sonnet-5`) |
-| `likely_disinformation` | boolean | The AI's verdict |
-| `reasoning` | text | Concise explanation for the verdict |
-| `checked_at` | timestamptz | When the check was run |
-
-Unique per `(post_id, provider)` — re-running a check for the same provider overwrites (upserts) the previous suggestion rather than accumulating history.
-
-### `ai_fact_check_sources`
-Sources backing an `ai_fact_checks` suggestion (e.g. EUvsDisinfo articles, web search results).
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | serial | Primary key |
-| `ai_fact_check_id` | integer | Foreign key to ai_fact_checks |
-| `title` | text | Source title |
-| `link` | text | Source URL |
-
-Deleted automatically (`ON DELETE CASCADE`) when its parent `ai_fact_checks` row is replaced or removed.
+| `account_id`, `platform`, `username`, `account_url`, `display_name` | | The account |
+| `confirmed_count` | bigint | Posts labeled as misinformation |
+| `unreviewed_count` | bigint | Theme posts not yet reviewed |
 
 ### `frames`
 Central misinformation themes that posts can be tagged with.
@@ -181,9 +167,8 @@ The `PGRST_DB_ANON_ROLE` must be a PostgreSQL role that has `SELECT` on the tabl
 
 ```sql
 CREATE ROLE anon NOLOGIN;
-GRANT SELECT ON accounts, posts, summaries, frames, ai_fact_checks, ai_fact_check_sources, articles TO anon;
+GRANT SELECT ON accounts, posts, summaries, frames, articles, post_reposts, account_review_queue TO anon;
 GRANT UPDATE, DELETE ON posts, frames TO anon;
-GRANT INSERT, UPDATE, DELETE ON ai_fact_checks, ai_fact_check_sources TO anon;
 ```
 
 ## Notes

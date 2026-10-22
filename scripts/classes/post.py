@@ -18,6 +18,7 @@ class Post:
     comments: int = 0
     is_checked: bool = False
     is_relevant: Optional[bool] = None
+    relevant_for_signal_jam_theme: bool = False
     contains_misinformation: Optional[bool] = None
     notes: Optional[str] = None
     frame_id: Optional[int] = None

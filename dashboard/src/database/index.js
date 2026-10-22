@@ -17,10 +17,11 @@ if (!db) {
   throw new Error(`Unknown database provider: ${DB_PROVIDER}`)
 }
 
-export const getPosts = (limit, offset) => db.getPosts(limit, offset, DASHBOARD_START_DATE)
-export const getCheckedPosts = (limit, offset) => db.getCheckedPosts(limit, offset, DASHBOARD_START_DATE)
+export const getAccountReviewQueue = db.getAccountReviewQueue
+export const getUnreviewedPostsForAccount = (accountId) => db.getUnreviewedPostsForAccount(accountId, DASHBOARD_START_DATE)
+export const getUnreviewedPostsFromOtherAccounts = (limit, offset) => db.getUnreviewedPostsFromOtherAccounts(limit, offset, DASHBOARD_START_DATE)
+export const getLatestPosts = (limit, offset) => db.getLatestPosts(limit, offset, DASHBOARD_START_DATE)
 export const getMostActiveAccounts = (limit) => db.getMostActiveAccounts(limit, DASHBOARD_START_DATE)
-export const getUnlabeledCount = () => db.getUnlabeledCount(DASHBOARD_START_DATE)
 export const getPostCounts = db.getPostCounts
 export const getPostsPerDay = db.getPostsPerDay
 export const getLastScrapedAt = db.getLastScrapedAt

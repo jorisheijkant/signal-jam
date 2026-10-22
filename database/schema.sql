@@ -13,6 +13,8 @@ CREATE TABLE accounts (
     username VARCHAR(255) NOT NULL,
     account_url TEXT,
     display_name VARCHAR(255),
+    is_watched BOOLEAN NOT NULL DEFAULT FALSE,   -- listed in a source_data users file, synced by the scrapers
+    is_approved BOOLEAN NOT NULL DEFAULT FALSE,  -- kept in sync by trigger: 3+ posts with contains_misinformation
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     UNIQUE(platform, username)
@@ -38,6 +40,7 @@ CREATE TABLE posts (
 
     is_checked BOOLEAN DEFAULT FALSE,
     is_relevant BOOLEAN DEFAULT TRUE,
+    relevant_for_signal_jam_theme BOOLEAN NOT NULL DEFAULT FALSE,  -- post matches the theme filter terms
     contains_misinformation BOOLEAN,
     notes TEXT,
 
@@ -45,6 +48,23 @@ CREATE TABLE posts (
 
     UNIQUE(platform, url)
 );
+
+-- An account is approved once it has the required number of posts labeled as misinformation
+CREATE FUNCTION refresh_account_approval() RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE accounts
+    SET is_approved = (
+        SELECT COUNT(*) >= 3 FROM posts
+        WHERE account_id = NEW.account_id AND contains_misinformation IS TRUE
+    )
+    WHERE id = NEW.account_id;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trg_refresh_account_approval
+AFTER INSERT OR UPDATE OF contains_misinformation ON posts
+FOR EACH ROW EXECUTE FUNCTION refresh_account_approval();
 
 -- Who reposted a post, and when (plain retweets/shares — no own content, so no own label).
 -- Quote posts still get their own row in `posts` (post_type = 'quote') since they add commentary.
@@ -80,26 +100,6 @@ CREATE TABLE summaries (
     generated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- AI fact-check suggestions (moderators still own contains_misinformation)
-CREATE TABLE ai_fact_checks (
-    id SERIAL PRIMARY KEY,
-    post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-    provider VARCHAR(50) NOT NULL,
-    likely_disinformation BOOLEAN NOT NULL,
-    reasoning TEXT NOT NULL,
-    checked_at TIMESTAMPTZ DEFAULT NOW(),
-
-    UNIQUE(post_id, provider)
-);
-
--- Sources backing an AI fact-check suggestion
-CREATE TABLE ai_fact_check_sources (
-    id SERIAL PRIMARY KEY,
-    ai_fact_check_id INTEGER NOT NULL REFERENCES ai_fact_checks(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    link TEXT NOT NULL
-);
-
 -- Articles table (Russian state media and propaganda sites)
 CREATE TABLE articles (
     url          TEXT PRIMARY KEY,
@@ -113,6 +113,10 @@ CREATE TABLE articles (
     scraped_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Supabase: enable row level security and let the dashboard read articles with the publishable key.
+-- ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Public read access" ON articles FOR SELECT USING (true);
+
 -- Indexes
 CREATE INDEX idx_posts_platform ON posts(platform);
 CREATE INDEX idx_posts_frame_id ON posts(frame_id);
@@ -121,10 +125,35 @@ CREATE INDEX idx_posts_account_id ON posts(account_id);
 CREATE INDEX idx_posts_post_type ON posts(post_type);
 CREATE INDEX idx_posts_is_checked ON posts(is_checked);
 CREATE INDEX idx_posts_is_relevant ON posts(is_relevant);
+CREATE INDEX idx_posts_relevant_for_signal_jam_theme ON posts(relevant_for_signal_jam_theme);
+CREATE INDEX idx_accounts_is_approved ON accounts(is_approved);
 CREATE INDEX idx_accounts_platform ON accounts(platform);
 CREATE INDEX idx_post_reposts_post_id ON post_reposts(post_id);
 CREATE INDEX idx_post_reposts_account_id ON post_reposts(account_id);
-CREATE INDEX idx_ai_fact_checks_post_id ON ai_fact_checks(post_id);
-CREATE INDEX idx_ai_fact_check_sources_fact_check_id ON ai_fact_check_sources(ai_fact_check_id);
 CREATE INDEX idx_articles_published_at ON articles(published_at);
 CREATE INDEX idx_articles_source ON articles(source);
+
+-- Watched accounts that still need labeling: not approved yet, with unreviewed theme posts,
+-- and enough own posts (confirmed + unreviewed) to reach the 3 needed for approval.
+CREATE VIEW account_review_queue AS
+SELECT *
+FROM (
+    SELECT
+        a.id AS account_id,
+        a.platform,
+        a.username,
+        a.account_url,
+        a.display_name,
+        COUNT(p.id) FILTER (WHERE p.contains_misinformation IS TRUE) AS confirmed_count,
+        COUNT(p.id) FILTER (
+            WHERE p.is_checked IS FALSE
+              AND p.is_relevant
+              AND p.relevant_for_signal_jam_theme
+              AND p.post_type <> 'repost'
+        ) AS unreviewed_count
+    FROM accounts a
+    JOIN posts p ON p.account_id = a.id
+    WHERE a.is_watched AND NOT a.is_approved
+    GROUP BY a.id
+) counts
+WHERE unreviewed_count > 0 AND confirmed_count + unreviewed_count >= 3;

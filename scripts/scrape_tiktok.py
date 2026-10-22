@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / '.env')
 
 from db import Database
+from functions.db_operations import sync_watched_accounts
 from functions.setup_selenium import setup_selenium
 from functions.scrape_url import scrape_url
 from functions.ndjson_to_db import ndjson_to_db
@@ -14,10 +15,10 @@ from functions.tiktok.retry_on_load_error import retry_on_load_error
 from functions.llm import get_llm_provider
 from functions.utils.pick_rotating_sample import pick_rotating_sample
 
+TIKTOK_PLATFORM = 'tiktok'
 TIKTOK_PLATFORM_STATS_ID = 'tiktokcom'
 TIKTOK_SEARCH_URL_BASE = "https://www.tiktok.com/search?q="
 SELENIUM_HEADLESS = True
-ENABLE_AI_FACT_CHECK = False
 
 LANGUAGE_DETECTION_PROVIDER = os.getenv('LANGUAGE_DETECTION_PROVIDER', 'ollama')
 
@@ -35,16 +36,17 @@ def load_json(path):
 
 
 def main():
-    tiktok_users_to_scrape = load_json(SOURCE_DATA_DIR / 'tiktok_users_to_scrape.json')
+    all_tiktok_users = load_json(SOURCE_DATA_DIR / 'tiktok_users_to_scrape.json')
     terms_to_scrape = load_json(SOURCE_DATA_DIR / 'tiktok_terms_to_scrape.json')
     filter_terms = load_json(SOURCE_DATA_DIR / 'filter_terms.json')
 
     tiktok_users_to_scrape = pick_rotating_sample(
-        tiktok_users_to_scrape, USERS_PER_RUN, ROTATION_STATE_PATH, 'users')
+        all_tiktok_users, USERS_PER_RUN, ROTATION_STATE_PATH, 'users')
     terms_to_scrape = pick_rotating_sample(
         terms_to_scrape, TERMS_PER_RUN, ROTATION_STATE_PATH, 'terms')
 
     db = Database()
+    sync_watched_accounts(db.conn, TIKTOK_PLATFORM, [user["url"] for user in all_tiktok_users])
     driver = setup_selenium(headless=SELENIUM_HEADLESS)
     llm = get_llm_provider(LANGUAGE_DETECTION_PROVIDER)
 
@@ -60,7 +62,7 @@ def main():
             if user_ndjson_path:
                 ndjson_to_db(
                     db.conn, llm, user_ndjson_path, ndjson_to_tiktoks,
-                    filter_terms=filter_terms, run_fact_check=ENABLE_AI_FACT_CHECK,
+                    filter_terms=filter_terms,
                 )
 
         for term_index, term in enumerate(terms_to_scrape, 1):
@@ -69,10 +71,7 @@ def main():
             term_ndjson_path = scrape_url(
                 driver, term_url, term, TIKTOK_PLATFORM_STATS_ID, on_scroll=retry_on_load_error)
             if term_ndjson_path:
-                ndjson_to_db(
-                    db.conn, llm, term_ndjson_path, ndjson_to_tiktoks,
-                    run_fact_check=ENABLE_AI_FACT_CHECK,
-                )
+                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_tiktoks)
     finally:
         driver.quit()
         print("Browser closed. All done.")

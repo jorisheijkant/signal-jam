@@ -2,7 +2,8 @@
   <main class="flex-grow">
     <div class="max-w-3xl mx-auto flex flex-col gap-2 mb-6">
       <h2 class="text-2xl font-semibold text-gray-800">Posts</h2>
-      <p class="text-sm">Posts van sociale media over Nederland waarvan we vermoeden dat ze onderdeel zijn van pro-Russische beïnvloeding. Standaard zie je alleen de posts waarvan we hebben vastgesteld dat ze desinformatie bevatten. Zoek je op een term, dan zoek je door alle gelabelde posts.</p>
+      <p class="text-sm">Posts van sociale media over Nederland waarvan we vermoeden dat ze onderdeel zijn van pro-Russische beïnvloeding. De accounts in onze database hebben minstens drie keer bevestigd pro-Russische desinformatie verspreid. Dat betekent niet dat al hun posts desinformatie bevatten.</p>
+      <p class="text-sm">Standaard zie je alleen de posts die gaan over Oekraïne. Die filter kun je uitzetten. Wanneer je zoekt, dan neemt de zoekfunctie automatisch alle tweets uit de database mee.</p>
     </div>
 
     <form @submit.prevent="submitSearch" class="max-w-3xl mx-auto flex flex-wrap gap-3 mb-6">
@@ -33,9 +34,10 @@
         Zoeken
       </button>
       <label class="flex items-center gap-2 w-full text-sm text-gray-600 cursor-pointer">
-        <input v-model="onlyMisinformation" type="checkbox" @change="runSearch" />
-        Alleen posts met desinformatie
+        <input v-model="onlyThemePosts" type="checkbox" @change="runSearch" />
+        Alleen posts over Oekraïne
       </label>
+      <!-- Edit above line if you are using this software for another theme -->
     </form>
 
     <ul class="max-w-3xl mx-auto flex flex-wrap gap-x-4 gap-y-1 mb-6 text-xs text-gray-600" aria-label="Legenda">
@@ -108,7 +110,7 @@ const route = useRoute()
 const router = useRouter()
 
 const term = ref('')
-const onlyMisinformation = ref(true)
+const onlyThemePosts = ref(true)
 const selectedFrameId = ref(null)
 const selectedPlatform = ref(null)
 const startDate = ref('')
@@ -138,8 +140,7 @@ async function fetchPage(offset) {
       platform: selectedPlatform.value || null,
       startDate: startDate.value || null,
       endDate: endDate.value || null,
-      containsMisinformation: onlyMisinformation.value,
-      isChecked: true,
+      onlyThemePosts: onlyThemePosts.value,
     },
     PAGE_SIZE,
     offset
@@ -154,7 +155,7 @@ async function fetchPage(offset) {
 }
 
 async function submitSearch() {
-  if (term.value) onlyMisinformation.value = false
+  if (term.value) onlyThemePosts.value = false
   await runSearch()
 }
 
@@ -211,7 +212,7 @@ function applyQueryParams() {
   if (queryEnd) endDate.value = queryEnd
 
   const hasSearchParams = Object.keys(route.query).length > 0
-  if (hasSearchParams) onlyMisinformation.value = false
+  if (hasSearchParams) onlyThemePosts.value = false
 }
 
 onMounted(async () => {

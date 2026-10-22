@@ -1,7 +1,6 @@
 <template>
   <div class="module most-active-accounts-module bg-white border border-1 border-amethyst-200 p-4 md:p-8 w-full">
     <h2 class="text-2xl font-semibold text-gray-800 mb-4">Meest actieve accounts</h2>
-    <p class="text-sm text-gray-400 mb-4">Aantal posts met misinformatie (en totaal aantal posts in de database).</p>
     <div class="accounts-list space-y-3">
       <div
         v-for="account in visibleAccounts"
@@ -20,7 +19,7 @@
           <p class="text-sm text-gray-500">{{ formatPlatformLabel(account.platform) }}</p>
         </div>
         <div class="account-activity text-right">
-          <span class="text-sm font-semibold text-gray-600">{{ account.misinfoCount }} <span class="text-gray-400">({{ account.totalCount }})</span></span>
+          <span class="text-sm font-semibold text-gray-600">{{ account.totalCount }} posts</span>
         </div>
       </div>
     </div>

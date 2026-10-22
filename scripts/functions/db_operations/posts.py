@@ -34,9 +34,9 @@ def insert_post(conn, post: Post) -> int:
             INSERT INTO posts (
                 url, platform, account_id, content, post_type,
                 parent_post_id, posted_at, likes, reposts, comments,
-                is_checked, contains_misinformation, platform_data
+                is_checked, contains_misinformation, relevant_for_signal_jam_theme, platform_data
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (platform, url) DO NOTHING
             RETURNING id
             """,
@@ -44,7 +44,8 @@ def insert_post(conn, post: Post) -> int:
                 post.url, post.platform, post.account_id, post.content,
                 post.post_type, post.parent_post_id, post.posted_at,
                 post.likes, post.reposts, post.comments,
-                post.is_checked, post.contains_misinformation, platform_data,
+                post.is_checked, post.contains_misinformation,
+                post.relevant_for_signal_jam_theme, platform_data,
             ),
         )
         conn.commit()
