@@ -71,6 +71,7 @@ def get_posts_for_week(conn, week_start: date, week_end: date) -> list[dict]:
             WHERE p.posted_at::date BETWEEN %s AND %s
               AND p.content IS NOT NULL
               AND p.content != ''
+              AND p.relevant_for_signal_jam_theme
             ORDER BY p.posted_at ASC
             """,
             (week_start, week_end),
