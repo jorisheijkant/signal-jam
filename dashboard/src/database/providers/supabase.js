@@ -86,11 +86,11 @@ async function getMostActiveAccounts(limit = 6, startDate = null) {
 }
 
 async function getPostCounts() {
-  const [{ count: total, error: e1 }, { count: misinfo, error: e2 }] = await Promise.all([
+  const [{ count: total, error: e1 }, { count: themeCount, error: e2 }] = await Promise.all([
     client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true),
-    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true).eq('contains_misinformation', true),
+    client.from('posts').select('*', { count: 'exact', head: true }).eq('is_relevant', true).eq('relevant_for_signal_jam_theme', true),
   ])
-  return { total, misinfo, error: e1 || e2 }
+  return { total, themeCount, error: e1 || e2 }
 }
 
 async function getLastScrapedAt() {

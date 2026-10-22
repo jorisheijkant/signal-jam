@@ -4,6 +4,8 @@
     <p class="text-gray-600 mb-4">{{ lastModified }}</p>
     <div class="flex flex-col gap-1 text-sm text-gray-600">
       <p>Aantal posts in database: <span class="font-medium text-gray-800">{{ totalCount }}</span></p>
+      <p>Aantal posts over Oekraïne: <span class="font-medium text-gray-800">{{ themeCount }}</span></p>
+      <!-- Edit the above if you use the software to monitor a different topic --> 
       <p>Versie: {{ appVersion }}</p>
     </div>
   </div>
@@ -15,6 +17,7 @@ import { getLastScrapedAt, getPostCounts } from '../database'
 
 const lastModified = ref('Laden...')
 const totalCount = ref('—')
+const themeCount = ref('—')
 
 const appVersion = __APP_VERSION__
 
@@ -38,6 +41,7 @@ onMounted(async () => {
 
   if (!counts.error) {
     totalCount.value = counts.total ?? '—'
+    themeCount.value = counts.themeCount ?? '—'
   }
 })
 </script>
