@@ -71,7 +71,10 @@ def main():
             term_url = f"{X_SEARCH_URL_BASE}{term}{X_SEARCH_URL_AFFIX}"
             term_ndjson_path = scrape_url(driver, term_url, term, X_PLATFORM_STATS_ID)
             if term_ndjson_path:
-                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_tweets)
+                ndjson_to_db(
+                    db.conn, llm, term_ndjson_path, ndjson_to_tweets,
+                    required_search_term=term,
+                )
     finally:
         driver.quit()
         print("Browser closed. All done.")

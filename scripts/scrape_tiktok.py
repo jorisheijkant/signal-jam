@@ -71,7 +71,10 @@ def main():
             term_ndjson_path = scrape_url(
                 driver, term_url, term, TIKTOK_PLATFORM_STATS_ID, on_scroll=retry_on_load_error)
             if term_ndjson_path:
-                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_tiktoks)
+                ndjson_to_db(
+                    db.conn, llm, term_ndjson_path, ndjson_to_tiktoks,
+                    required_search_term=term,
+                )
     finally:
         driver.quit()
         print("Browser closed. All done.")

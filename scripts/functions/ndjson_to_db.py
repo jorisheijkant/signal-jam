@@ -3,6 +3,7 @@ import time
 from functions.db_operations import upsert_account, is_account_approved, insert_post, get_post_id_by_url, record_repost
 from functions.llm import detect_language_with_llm
 from functions.utils.matches_filter_terms import matches_filter_terms
+from functions.utils.contains_search_term import contains_search_term
 
 REQUIRED_LANGUAGE_ISO = 'nl'
 RATE_LIMIT_REST_SECONDS = 120
@@ -27,8 +28,11 @@ def handle_repost(conn, account, post):
     print(f"  [repost recorded] {account.username} reposted post {original_post_id}")
 
 
-def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None):
-    """Parse an ndjson capture with parse_ndjson and insert the resulting posts into the database."""
+def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None, required_search_term=None):
+    """Parse an ndjson capture with parse_ndjson and insert the resulting posts into the database.
+
+    With required_search_term, posts that do not contain that term are dropped, since a capture
+    also holds unrelated tweets from the rest of the page (sidebar, promoted posts)."""
     try:
         results = parse_ndjson(ndjson_path)
         print(f"Parsed {len(results)} posts, inserting into database...")
@@ -36,6 +40,10 @@ def ndjson_to_db(conn, llm, ndjson_path, parse_ndjson, filter_terms=None):
         for account, post in results:
             if post.post_type == 'reply':
                 print(f"  [filtered] {account.username} — reply, skipping")
+                continue
+
+            if required_search_term and not contains_search_term(post, required_search_term):
+                print(f"  [filtered] {account.username} — does not contain search term '{required_search_term}', skipping")
                 continue
 
             post.relevant_for_signal_jam_theme = matches_filter_terms(post.content, filter_terms)

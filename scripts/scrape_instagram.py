@@ -69,7 +69,10 @@ def main():
             term_url = f"{INSTAGRAM_SEARCH_URL_BASE}{term}"
             term_ndjson_path = scrape_url(driver, term_url, term, INSTAGRAM_PLATFORM_STATS_ID)
             if term_ndjson_path:
-                ndjson_to_db(db.conn, llm, term_ndjson_path, ndjson_to_instagram_posts)
+                ndjson_to_db(
+                    db.conn, llm, term_ndjson_path, ndjson_to_instagram_posts,
+                    required_search_term=term,
+                )
     finally:
         driver.quit()
         print("Browser closed. All done.")
