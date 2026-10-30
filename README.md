@@ -8,7 +8,7 @@ The software suite is tailored for use with cloud providers for ease of use, but
 - Supabase (recommended, tested in production).
 - Neon (implemented, not yet tested).
 - Railway (implemented, not yet tested).
-- Any local postgres instance. This is the self-hosted / DIY solution (implemented, not yet tested).
+- Any local postgres instance. This is the self-hosted / DIY solution (implemented, not yet tested). Use something like [Postgrest](https://docs.postgrest.org/) to expose the db to the scripts and dashboard.
 
 #### Script deployment
 - With a cronjob on a local VPS or a local machine. This is the self-hosted / DIY solution (recommended).
