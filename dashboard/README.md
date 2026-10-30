@@ -34,7 +34,7 @@ These variables are embedded at build time. After changing them, run `yarn build
 
 ### SEO files
 
-- **`public/robots.txt`** — blocks `/labelen` and `/frames` from crawlers; allow-lists the public pages.
+- **`public/robots.txt`** — blocks `/labelen` and `/instellingen` from crawlers; allow-lists the public pages.
 - **`public/sitemap.xml`** — lists the three public pages. Update the `https://your-domain.com` placeholder with your actual domain before deploying.
 
 ## Database

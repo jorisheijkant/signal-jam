@@ -16,7 +16,7 @@ Stores social media accounts that are being tracked.
 | `username` | varchar | Handle/username (unique per platform) |
 | `account_url` | text | URL to the account profile (optional) |
 | `display_name` | varchar | Display name (optional) |
-| `is_watched` | boolean | True when the account is listed in a `source_data/*/…_users_to_scrape.json` file. Synced by the scrapers at the start of each run |
+| `is_watched` | boolean | True when the account is on the scrape list. Managed on the Instellingen page of the dashboard (logged-in users only); the scrapers read it at the start of each run |
 | `is_approved` | boolean | True once the account has 3 posts labeled as misinformation. Set by a trigger on `posts`, never by hand. Approved accounts get all their posts scraped; candidates only posts matching the theme filter terms |
 | `created_at` | timestamptz | When we added this account |
 
@@ -44,6 +44,19 @@ Stores all scraped posts across platforms.
 | `notes` | text | Free-text notes on the post (optional) |
 | `frame_id` | integer | Foreign key to frames (optional) |
 | `platform_data` | jsonb | Platform-specific metadata |
+
+### `scrape_terms`
+Search and filter terms per platform, managed on the Instellingen page of the dashboard (logged-in users only). The scrapers read them at the start of each run.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | serial | Primary key |
+| `platform` | enum | twitter, tiktok, facebook, or instagram |
+| `kind` | enum | `search`: term the scraper searches for on the platform. `filter`: word that flags a post as relevant for the theme (`relevant_for_signal_jam_theme`) |
+| `term` | text | The term. Search terms are used as-is in the search URL (so `%22rt.com%22` searches for the exact phrase) |
+| `created_at` | timestamptz | When the term was added |
+
+Unique per `(platform, kind, term)`.
 
 ### `account_review_queue` (view)
 Watched accounts that still need labeling, used by the labeling page. One row per account that is not yet approved, has unreviewed theme posts, and has enough own posts (confirmed + unreviewed) to reach the three needed for approval. Reposts are not counted, since they have no label of their own.
@@ -98,8 +111,10 @@ Weekly AI-generated summaries of tracked content.
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Go to the SQL Editor in your dashboard
 3. Paste the contents of `schema.sql` and run it
-4. Find your connection string under Settings > Database > Connection string
-5. Add to your `.env`:
+4. Run `supabase_account_policies.sql` the same way. It makes the accounts table readable for visitors only when the account is approved, and lets logged-in users add, edit and delete accounts. On an existing database, also drop any older "public read" policy on `accounts`, otherwise it keeps all accounts readable for everyone
+5. Run `supabase_term_policies.sql` too, so only logged-in users can read and edit `scrape_terms`. On an existing database, first run `migrations/scrape_terms.sql` to create the table
+6. Find your connection string under Settings > Database > Connection string
+7. Add to your `.env`:
    ```
    DATABASE_URL=postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
    ```

@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { groupPostsByDay, groupPostsByAccount, buildArticleTermsFilter, filterUnreviewedThemePosts } from '../utils.js'
 import { fetchAllRows } from './fetchAllRows.js'
+import { createAccountQueries } from './accountQueries.js'
+import { createTermQueries } from './termQueries.js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
 
 const client = createClient(supabaseUrl, supabasePublishableKey)
+const { getWatchedAccounts, addWatchedAccount, updateAccount, deleteAccount } = createAccountQueries(client)
+const { getTerms, addTerm, deleteTerm } = createTermQueries(client)
 
 async function getPostsPerDay(days = 20) {
   const since = new Date()
@@ -280,6 +284,13 @@ export default {
   updateFrame,
   deleteFrame,
   getActiveFrames,
+  getWatchedAccounts,
+  addWatchedAccount,
+  updateAccount,
+  deleteAccount,
+  getTerms,
+  addTerm,
+  deleteTerm,
   searchPosts,
   searchArticles,
 }

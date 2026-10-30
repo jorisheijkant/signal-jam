@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -6,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent.parent / '.env')
 
 from db import Database
-from functions.db_operations import sync_watched_accounts
+from functions.db_operations import get_watched_accounts, get_terms
 from functions.setup_selenium import setup_selenium
 from functions.scrape_url import scrape_url
 from functions.ndjson_to_db import ndjson_to_db
@@ -26,27 +25,20 @@ USERS_PER_RUN = 8
 TERMS_PER_RUN = 2
 
 BASE_DIR = Path(__file__).parent
-SOURCE_DATA_DIR = BASE_DIR / 'source_data' / 'tiktok'
 ROTATION_STATE_PATH = BASE_DIR / 'data' / 'tiktok_scrape_rotation_state.json'
 
 
-def load_json(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-
 def main():
-    all_tiktok_users = load_json(SOURCE_DATA_DIR / 'tiktok_users_to_scrape.json')
-    terms_to_scrape = load_json(SOURCE_DATA_DIR / 'tiktok_terms_to_scrape.json')
-    filter_terms = load_json(SOURCE_DATA_DIR / 'filter_terms.json')
+    db = Database()
+    all_tiktok_users = get_watched_accounts(db.conn, TIKTOK_PLATFORM)
+    terms_to_scrape = get_terms(db.conn, TIKTOK_PLATFORM, 'search')
+    filter_terms = get_terms(db.conn, TIKTOK_PLATFORM, 'filter')
 
     tiktok_users_to_scrape = pick_rotating_sample(
         all_tiktok_users, USERS_PER_RUN, ROTATION_STATE_PATH, 'users')
     terms_to_scrape = pick_rotating_sample(
         terms_to_scrape, TERMS_PER_RUN, ROTATION_STATE_PATH, 'terms')
 
-    db = Database()
-    sync_watched_accounts(db.conn, TIKTOK_PLATFORM, [user["url"] for user in all_tiktok_users])
     driver = setup_selenium(headless=SELENIUM_HEADLESS)
     llm = get_llm_provider(LANGUAGE_DETECTION_PROVIDER)
 

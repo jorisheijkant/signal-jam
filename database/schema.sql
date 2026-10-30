@@ -13,11 +13,25 @@ CREATE TABLE accounts (
     username VARCHAR(255) NOT NULL,
     account_url TEXT,
     display_name VARCHAR(255),
-    is_watched BOOLEAN NOT NULL DEFAULT FALSE,   -- listed in a source_data users file, synced by the scrapers
+    is_watched BOOLEAN NOT NULL DEFAULT FALSE,   -- on the scrape list, managed from the dashboard (Supabase: see supabase_account_policies.sql)
     is_approved BOOLEAN NOT NULL DEFAULT FALSE,  -- kept in sync by trigger: 3+ posts with contains_misinformation
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     UNIQUE(platform, username)
+);
+
+-- Term kind: 'search' terms are scraped per platform, 'filter' terms flag posts as relevant for the theme
+CREATE TYPE term_kind AS ENUM ('search', 'filter');
+
+-- Search and filter terms per platform, managed from the dashboard (Supabase: see supabase_term_policies.sql)
+CREATE TABLE scrape_terms (
+    id SERIAL PRIMARY KEY,
+    platform platform NOT NULL,
+    kind term_kind NOT NULL,
+    term TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    UNIQUE(platform, kind, term)
 );
 
 -- Posts table

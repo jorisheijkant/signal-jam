@@ -33,6 +33,13 @@ export const createFrame = db.createFrame
 export const updateFrame = db.updateFrame
 export const deleteFrame = db.deleteFrame
 export const getActiveFrames = db.getActiveFrames
+export const getWatchedAccounts = db.getWatchedAccounts
+export const addWatchedAccount = db.addWatchedAccount
+export const updateAccount = db.updateAccount
+export const deleteAccount = db.deleteAccount
+export const getTerms = db.getTerms
+export const addTerm = db.addTerm
+export const deleteTerm = db.deleteTerm
 export const searchPosts = (filters, limit, offset) => db.searchPosts({ ...filters, startDate: filters.startDate ?? DASHBOARD_START_DATE }, limit, offset)
 export const searchArticles = (filters, limit, offset) => db.searchArticles({ ...filters, startDate: filters.startDate ?? DASHBOARD_START_DATE }, limit, offset)
 

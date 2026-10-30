@@ -11,7 +11,7 @@
         <router-link to="/labelen" class="text-sm text-amethyst-700 hover:text-amethyst-900">
           Labelen
         </router-link>
-        <router-link to="/frames" class="text-sm text-amethyst-700 hover:text-amethyst-900">Frames</router-link>
+        <router-link to="/instellingen" class="text-sm text-amethyst-700 hover:text-amethyst-900">Instellingen</router-link>
         <button
           @click="handleSignOut"
           class="px-4 py-2 text-sm border border-amethyst-600 text-amethyst-700 hover:bg-amethyst-100 transition-colors cursor-pointer"

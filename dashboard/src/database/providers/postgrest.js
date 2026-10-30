@@ -1,12 +1,16 @@
 import { PostgrestClient } from '@supabase/postgrest-js'
 import { groupPostsByDay, groupPostsByAccount, buildArticleTermsFilter, filterUnreviewedThemePosts } from '../utils.js'
 import { fetchAllRows } from './fetchAllRows.js'
+import { createAccountQueries } from './accountQueries.js'
+import { createTermQueries } from './termQueries.js'
 
 const url = import.meta.env.VITE_POSTGREST_URL
 const anonKey = import.meta.env.VITE_POSTGREST_ANON_KEY
 
 const headers = anonKey ? { Authorization: `Bearer ${anonKey}` } : {}
 const client = new PostgrestClient(url, { headers })
+const { getWatchedAccounts, addWatchedAccount, updateAccount, deleteAccount } = createAccountQueries(client)
+const { getTerms, addTerm, deleteTerm } = createTermQueries(client)
 
 async function getPostsPerDay(days = 20) {
   const since = new Date()
@@ -283,6 +287,13 @@ export default {
   updateFrame,
   deleteFrame,
   getActiveFrames,
+  getWatchedAccounts,
+  addWatchedAccount,
+  updateAccount,
+  deleteAccount,
+  getTerms,
+  addTerm,
+  deleteTerm,
   searchPosts,
   searchArticles,
 }

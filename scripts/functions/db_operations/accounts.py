@@ -21,19 +21,28 @@ def upsert_account(conn, account: Account) -> int:
         return cur.fetchone()[0]
 
 
-def sync_watched_accounts(conn, platform: str, user_urls: list[str]) -> None:
-    """Mark accounts on the platform as watched exactly when their profile URL is in user_urls."""
-    normalized_urls = [url.rstrip('/').lower() for url in user_urls]
+def get_watched_accounts(conn, platform: str) -> list[dict]:
+    """Accounts on the platform that are on the scrape list, as {name, url} dicts."""
     with conn.cursor() as cur:
         cur.execute(
             """
-            UPDATE accounts
-            SET is_watched = (lower(rtrim(account_url, '/')) = ANY(%s))
-            WHERE platform = %s
+            SELECT COALESCE(display_name, username), account_url
+            FROM accounts
+            WHERE platform = %s AND is_watched AND account_url IS NOT NULL
+            ORDER BY id
             """,
-            (normalized_urls, platform),
+            (platform,),
         )
+        return [{"name": name, "url": url} for name, url in cur.fetchall()]
+
+
+def watch_account(conn, account: Account) -> int:
+    """Upsert the account and put it on the scrape list."""
+    account_id = upsert_account(conn, account)
+    with conn.cursor() as cur:
+        cur.execute("UPDATE accounts SET is_watched = TRUE WHERE id = %s", (account_id,))
         conn.commit()
+    return account_id
 
 
 def is_account_approved(conn, account: Account) -> bool:

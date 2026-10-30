@@ -1,10 +1,5 @@
 <template>
-  <main class="flex-grow">
-    <div class="flex items-baseline gap-3 mb-6">
-      <h2 class="text-2xl font-semibold text-gray-800">Frames</h2>
-      <span class="text-sm text-gray-500">{{ frames.length }} frame{{ frames.length !== 1 ? 's' : '' }}</span>
-    </div>
-
+  <CollapsibleSection title="Frames" :subtitle="`${frames.length} frame${frames.length !== 1 ? 's' : ''}`">
     <form @submit.prevent="addFrame" class="border border-amethyst-200 p-4 md:p-6 mb-6">
       <h3 class="text-sm font-semibold text-gray-700 mb-3">Nieuw frame toevoegen</h3>
       <div class="flex flex-col gap-3">
@@ -114,12 +109,13 @@
         Nog geen frames aangemaakt.
       </p>
     </div>
-  </main>
+  </CollapsibleSection>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getFrames, createFrame, updateFrame, deleteFrame } from '../database'
+import CollapsibleSection from './CollapsibleSection.vue'
 
 const frames = ref([])
 const loading = ref(true)

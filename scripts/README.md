@@ -10,14 +10,7 @@ cp .env.example .env
 # fill in your database credentials
 ```
 
-Set up your source data files for the platform(s) you want to scrape (see [Source data](#source-data) below), e.g. for X:
-```bash
-cp source_data/x/x_users_to_scrape.example.json source_data/x/x_users_to_scrape.json
-cp source_data/x/terms_to_scrape.example.json source_data/x/terms_to_scrape.json
-cp source_data/x/filter_terms.example.json source_data/x/filter_terms.json
-```
-
-Then edit each file with your actual values before running.
+The accounts, search terms and filter terms to scrape live in the database: add them on the Instellingen page of the dashboard (see [Scrape settings](#scrape-settings)).
 
 ## Running
 
@@ -39,28 +32,26 @@ Besides social media, the scripts gather articles from Russian state media and p
 
 Copy the `*.example.json` files in `source_data/articles/` to the same name without `.example` to configure them. `search_terms.json` decides which articles end up in the weekly summary. Set `DNS_RESOLVER` / `DNS_OVER_HTTPS_URL` in `.env` if your ISP blocks the Russian domains.
 
-## Source data
+## Scrape settings
 
-Configuration for what to scrape lives in `source_data/<platform>/`. These files are gitignored — only the `.example.json` versions are committed. Copy them and fill in your own values.
+What to scrape is stored in the database and managed by logged-in users on the Instellingen page of the dashboard. Every scraper run reads the current settings.
 
-| File | Description |
-|---|---|
-| `x_users_to_scrape.json` | List of X accounts to scrape, as `{name, url}` objects |
-| `terms_to_scrape.json` | List of search terms used for X term searches |
-| `tiktok_users_to_scrape.json` | List of TikTok accounts to scrape, as `{name, url}` objects |
-| `tiktok_terms_to_scrape.json` | List of search terms used for TikTok term searches |
-| `instagram_users_to_scrape.json` | List of Instagram accounts to scrape, as `{name, url}` objects |
-| `instagram_terms_to_scrape.json` | List of keywords used for Instagram's `/explore/search/keyword/` search page |
-| `filter_terms.json` | Theme word filter applied to user scrape results (see below), one per platform folder |
+| Setting | Stored in | Description |
+|---|---|---|
+| Accounts | `accounts` with `is_watched = true` | The accounts whose posts are scraped |
+| Search terms | `scrape_terms`, kind `search` | Terms searched on the platform: X search, TikTok search, or Instagram's `/explore/search/keyword/` page |
+| Filter terms | `scrape_terms`, kind `filter` | Theme word filter applied to user scrape results (see below) |
+
+To move an existing setup over, run `python import_source_data.py` once. It reads the old `source_data/<platform>/` JSON files (users, search terms and filter terms; missing files are skipped) into the database and can be re-run safely. After that those files are no longer used. Only `source_data/articles/` is still read from disk.
 
 ### Theme flag and account approval
-Every post gets `relevant_for_signal_jam_theme`. It is true when the content contains at least one word from `filter_terms.json` (case-insensitive). Posts from **term scrapes** are always flagged, since they are already targeted by the search term itself.
+Every post gets `relevant_for_signal_jam_theme`. It is true when the content contains at least one filter term (case-insensitive). Posts from **term scrapes** are always flagged, since they are already targeted by the search term itself.
 
 Whether a post is stored depends on the account:
 - **Approved accounts** (`accounts.is_approved`): all posts are stored, flagged or not.
 - **Candidate accounts** (new or not yet approved): only flagged posts are stored, so they can be labeled by hand.
 
-At the start of each run the scraper marks every account listed in its `*_users_to_scrape.json` as watched (`accounts.is_watched`). Watched accounts that are not yet approved are shown as cards on the labeling page. Accounts found only through search terms are reviewed post by post.
+Watched accounts (`accounts.is_watched`) that are not yet approved are shown as cards on the labeling page. Accounts found only through search terms are reviewed post by post.
 
 An account becomes approved automatically once it has three posts labeled `contains_misinformation` (database trigger, see `database/schema.sql`).
 
