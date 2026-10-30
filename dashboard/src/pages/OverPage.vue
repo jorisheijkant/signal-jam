@@ -11,6 +11,15 @@
       <p class="text-sm text-gray-700 leading-relaxed">
         Het dashboard dat je hier ziet, is het hart van dit onderzoek. We verzamelen hier posts die bepaalde termen bevatten of zijn geplaatst door bekende verspreiders van (pro-Russische) desinformatie. We analyseren alleen posts in het Nederlands, we richten ons immers op het Nederlandse taalgebied. Alle posts zijn met de hand gecontroleerd voordat ze het label "desinformatie" krijgen. Daarbij maken we vooral gebruik van factchecks en eerder onderzoek naar desinformatie-frames. 
       </p>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        Er zijn twee manieren waarop een post in dit dashboard terecht kan komen. Allereerst zoeken we naar posts met daarin termen die vaak voorkomen in pro-Russische desinformatie, en naar posts die links bevatten van bekende propagandakanalen zoals RT en sites uit het Pravda-netwerk. Daarnaast zoeken we naar accounts die vaker (minstens drie keer) pro-Russische desinformatie hebben verspreid, waarna al hun posts in deze database terechtkomen. Let op: alleen de posts met het label "Bevat desinformatie" zijn met de hand gecontroleerd op desinformatie.
+      </p>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        De artikelen zijn verzameld via bekende desinformatiekanalen die (indirect) onder controle staan van het Kremlin. Denk aan Lenta, RT en grote desinformatienetwerken zoals het Pravda-netwerk. Vanwege de hoeveelheid desinformatie in deze artikelen, hebben we ze wel achter een wachtwoord gezet. Wat erin staat, kun je ook terugvinden in de samenvattingen.
+      </p>
+      <p class="text-sm text-gray-700 leading-relaxed">
+      De code van het dashboard is <em>open source</em>, je kunt deze zelf ook draaien. <a target="_blank" href="https://github.com/jorisheijkant/signal-jam" class="underline">De code is beschikbaar via Github</a>.
+      </p>
       <p class="text-sm text-gray-700 font-bold leading-relaxed">
         Dit onderzoek is mede mogelijk gemaakt door
       </p>
