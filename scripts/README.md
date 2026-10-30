@@ -22,13 +22,12 @@ python scrape_instagram.py
 
 ## Articles (Russian news outlets)
 
-Besides social media, the scripts gather articles from Russian state media and propaganda sites into the `articles` table. `summarize_weeks.py` uses them for the weekly propaganda summary, and the dashboard shows them on the Artikelen page.
+Besides social media, the scripts gather articles from Russian state media and propaganda sites into the `articles` table. `summarize_weeks.py` uses them for the weekly propaganda summary, and the dashboard shows them on the Artikelen page. This is specific to investigating Russian disinformation, so you can skip this step (and delete the relevant page in the dashboard as well) if you do not plan to include media outlets in your research.
 
 | Script | What it does |
 |--------|--------------|
 | `scrape_russian_rss.py` | Reads the RSS feeds in `source_data/articles/russian_feeds.json` and scrapes the full text of new articles |
 | `scrape_pravda.py` | Scrapes the Pravda sites in `source_data/articles/pravda_sources.json` |
-| `migrate_source_desk_articles.py` | One-off copy of the old Source Desk database (`SOURCE_DESK_DATABASE_URL` constant in the script) into `DATABASE_URL`. Run with `--dry-run` first; re-running is safe |
 
 Copy the `*.example.json` files in `source_data/articles/` to the same name without `.example` to configure them. `search_terms.json` decides which articles end up in the weekly summary. Set `DNS_RESOLVER` / `DNS_OVER_HTTPS_URL` in `.env` if your ISP blocks the Russian domains.
 
@@ -41,8 +40,6 @@ What to scrape is stored in the database and managed by logged-in users on the I
 | Accounts | `accounts` with `is_watched = true` | The accounts whose posts are scraped |
 | Search terms | `scrape_terms`, kind `search` | Terms searched on the platform: X search, TikTok search, or Instagram's `/explore/search/keyword/` page |
 | Filter terms | `scrape_terms`, kind `filter` | Theme word filter applied to user scrape results (see below) |
-
-To move an existing setup over, run `python import_source_data.py` once. It reads the old `source_data/<platform>/` JSON files (users, search terms and filter terms; missing files are skipped) into the database and can be re-run safely. After that those files are no longer used. Only `source_data/articles/` is still read from disk.
 
 ### Theme flag and account approval
 Every post gets `relevant_for_signal_jam_theme`. It is true when the content contains at least one filter term (case-insensitive). Posts from **term scrapes** are always flagged, since they are already targeted by the search term itself.
@@ -59,7 +56,7 @@ On X, replies are not scraped by default, to prevent overly long discussion from
 
 ## Cloud deployment
 
-The scraper uses Selenium with Firefox and the Zeeschuimer browser extension, which means the container needs Firefox + geckodriver, and a Firefox profile that is already logged into X. The `Dockerfile` in this folder handles the first requirement; the profile requires a one-time manual setup step described below.
+The scraper uses Selenium with Firefox and the Zeeschuimer browser extension, which means the container needs Firefox + geckodriver, and a Firefox profile that is already logged into X, Instagram and Tiktok. The `Dockerfile` in this folder handles the first requirement; the profile requires a one-time manual setup step described below.
 
 ### Getting the Firefox profile to the cloud
 
