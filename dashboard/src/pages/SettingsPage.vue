@@ -7,12 +7,12 @@
     <TermsSection
       kind="search"
       title="Zoektermen"
-      description="Termen waarop de scrapers per platform zoeken. Ze worden ongewijzigd in de zoek-URL gebruikt, dus %22rt.com%22 zoekt op de exacte zin."
+      description="Naast de posts van bovenstaande accounts zoeken we ook los naar bepaalde termen op elk platform. Deze kun je hier toevoegen."
     />
     <TermsSection
       kind="filter"
       title="Filtertermen"
-      description="Een post van een account telt mee voor het thema zodra hij minstens één van deze woorden bevat (hoofdletterongevoelig). Zonder filtertermen telt elke post mee."
+      description="Niet elke post van de binnengehaalde accounts gaat over het thema. Zodra een post minstens één van deze woorden bevat valt hij onder het hoofdthema van het dashboard."
     />
   </main>
 </template>
