@@ -8,7 +8,7 @@ The front-end of the application consists of a Vue dashboard, presenting the dat
 - **Samenvattingen** - Short summaries of posted content, organized per week.
 - **Over** - About page.
 - **Instellingen** - Account, filter and search term management.
-- **Labeling** — authenticated users can review scraped posts and label them: mark as irrelevant (deletes the post), flag for misinformation, add notes, and mark as checked. Only checked posts appear on the dashboard.
+- **Labelen** — Authenticated users can review (posts from) accounts that are not approved yet and posts that are gathered through search terms on social media.
 
 ## Setup
 
