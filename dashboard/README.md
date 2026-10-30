@@ -2,7 +2,12 @@
 The front-end of the application consists of a Vue dashboard, presenting the data to authenticated users. It is built in the same _provider agnostic_ way as the other parts of the application, allowing you to swap out different tools for authentication and database integration.
 
 ## Pages
-- **Dashboard** — shows labeled posts with misinformation highlighted, along with stats modules (daily activity, most active accounts, topics).
+- **Dashboard** — shows labeled posts with disinformation highlighted, along with stats modules (daily activity, most active accounts, topics).
+- **Posts** - View all posts, authenticated users can label/add frames here as well.
+- **Artikelen** - The articles from media disinformation sources, as opposed to individual posts on social media.
+- **Samenvattingen** - Short summaries of posted content, organized per week.
+- **Over** - About page.
+- **Instellingen** - Account, filter and search term management.
 - **Labeling** — authenticated users can review scraped posts and label them: mark as irrelevant (deletes the post), flag for misinformation, add notes, and mark as checked. Only checked posts appear on the dashboard.
 
 ## Setup
@@ -39,7 +44,7 @@ These variables are embedded at build time. After changing them, run `yarn build
 
 ## Database
 
-For your database of choice, make sure you use the correct RLS-policies. Updating and deleting permissions (to authenitcated users!) are needed for a proper content labeling workflow.
+For your database of choice, make sure you use the correct RLS-policies. Updating and deleting permissions (only for authenticated users!) are needed for a proper content labeling workflow for some tables.
 
 ### Authentication
 Make sure to install your authentication method of choice before running the app. By default it uses Supabase Auth, with a magic link workflow. 
