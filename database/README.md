@@ -111,10 +111,9 @@ Weekly AI-generated summaries of tracked content.
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Go to the SQL Editor in your dashboard
 3. Paste the contents of `schema.sql` and run it
-4. Run `supabase_account_policies.sql` the same way. It makes the accounts table readable for visitors only when the account is approved, and lets logged-in users add, edit and delete accounts. On an existing database, also drop any older "public read" policy on `accounts`, otherwise it keeps all accounts readable for everyone
-5. Run `supabase_term_policies.sql` too, so only logged-in users can read and edit `scrape_terms`. On an existing database, first run `migrations/scrape_terms.sql` to create the table
-6. Find your connection string under Settings > Database > Connection string
-7. Add to your `.env`:
+4. Edit your RLS policies, so that public access to the tables is limited to reading them, except for the accounts and terms tables. Make sure to only allow authenticated users to write to those.
+5. Find your connection string under Settings > Database > Connection string
+6. Add to your `.env`:
    ```
    DATABASE_URL=postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
    ```
