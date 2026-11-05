@@ -9,7 +9,7 @@ def fetch_matching_articles(conn, terms: list[str], start_date: date, end_date: 
     with conn.cursor() as cur:
         cur.execute(
             f"""
-            SELECT url, title, source, published_at, summary, content
+            SELECT url, title, title_en, source, published_at, summary, content, content_en
             FROM articles
             WHERE published_at::date BETWEEN %s AND %s
               AND ({term_condition})

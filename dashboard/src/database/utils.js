@@ -43,7 +43,7 @@ export function escapeOrFilterValue(value) {
   return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 }
 
-const ARTICLE_TEXT_COLUMNS = ['title', 'summary', 'content']
+const ARTICLE_TEXT_COLUMNS = ['title', 'summary', 'content', 'title_en', 'content_en']
 
 export function buildArticleTermsFilter(terms) {
   return terms

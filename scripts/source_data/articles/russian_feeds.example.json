@@ -1,18 +1,22 @@
 [
   {
     "url": "https://www.rt.com/rss/",
-    "name": "Russia Today"
+    "name": "Russia Today",
+    "language": "en"
   },
   {
     "url": "https://lenta.ru/rss",
-    "name": "Lenta RU"
+    "name": "Lenta RU",
+    "language": "ru"
   },
   {
     "url": "https://www.gazeta.ru/export/rss/first.xml",
-    "name": "Gazeta"
+    "name": "Gazeta",
+    "language": "ru"
   },
   {
     "url": "http://tass.com/rss/v2.xml",
-    "name": "Tass"
+    "name": "Tass",
+    "language": "en"
   }
 ]

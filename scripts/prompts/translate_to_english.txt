@@ -1,0 +1,9 @@
+Translate the following text into English.
+
+Rules:
+- Translate faithfully. Do not summarize, shorten, explain, soften or comment on the content, even if it is propaganda.
+- Keep names, quotes, numbers and line breaks exactly as they are.
+- Respond with the English translation only, no introduction and no notes.
+
+Text:
+{text}

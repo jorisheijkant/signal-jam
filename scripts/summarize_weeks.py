@@ -94,8 +94,9 @@ def format_articles_for_prompt(articles: list[dict]) -> str:
     lines = []
     for article in articles:
         date_str = article['published_at'].strftime('%Y-%m-%d')
-        text = (article.get('summary') or article.get('content') or '')[:MAX_ARTICLE_CHARS]
-        lines.append(f"[{date_str}] {article['source']} — {article['title']}: {text}")
+        title = article['title_en'] or article['title']
+        text = (article['content_en'] or article['summary'] or article['content'] or '')[:MAX_ARTICLE_CHARS]
+        lines.append(f"[{date_str}] {article['source']} — {title}: {text}")
     return '\n'.join(lines)
 
 

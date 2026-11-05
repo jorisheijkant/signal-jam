@@ -5,9 +5,9 @@ from ..base import LLMProvider
 
 
 class OllamaProvider(LLMProvider):
-    def __init__(self):
+    def __init__(self, model: str | None = None):
         self.base_url = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-        self.model = os.getenv('OLLAMA_MODEL', 'llama3')
+        self.model = model or os.getenv('OLLAMA_MODEL', 'llama3')
 
     def complete(self, prompt: str) -> str:
         return self._generate(prompt)['response'].strip()

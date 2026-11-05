@@ -86,11 +86,14 @@ Articles scraped from Russian state media (RT, TASS, Lenta, Gazeta) and propagan
 | `title` | text | Article title |
 | `source` | text | Name of the outlet (e.g. `Tass`) |
 | `author` | text | Author (optional) |
-| `language` | varchar | Language code (optional) |
+| `language` | varchar | ISO 639-1 code of the article, set per source in the source files (e.g. `en`, `ru`, `nl`) |
 | `summary` | text | Summary as published in the feed (optional) |
 | `content` | text | Full article text (optional) |
+| `title_en` | text | English translation of the title (optional, filled by the translation step) |
+| `content_en` | text | English translation of the start of the content, about 250 characters (optional, filled by the translation step) |
 | `published_at` | timestamptz | When the article was published |
 | `scraped_at` | timestamptz | When we scraped the article |
+| `relevant_for_signal_jam_theme` | boolean | Whether the title, summary or content matches the filter terms in `search_terms.json`. Every article is stored, the dashboard hides unflagged ones by default |
 
 ### `summaries`
 Weekly AI-generated summaries of tracked content.

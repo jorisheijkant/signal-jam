@@ -4,8 +4,7 @@ from datetime import datetime, timezone
 
 def fetch_rss_articles(source):
     feed = feedparser.parse(source["url"])
-    language = feed.feed.get("language")
-    return [_parse_entry(entry, source["name"], language) for entry in feed.entries]
+    return [_parse_entry(entry, source["name"], source["language"]) for entry in feed.entries]
 
 
 def _parse_entry(entry, source_name, language):

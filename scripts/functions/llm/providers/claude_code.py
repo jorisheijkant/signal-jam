@@ -6,14 +6,14 @@ from ..base import LLMProvider
 class ClaudeCodeProvider(LLMProvider):
     """Runs prompts through the local Claude Code CLI, so they use the logged-in subscription."""
 
-    def __init__(self):
+    def __init__(self, model: str | None = None):
         try:
             import claude_agent_sdk
         except ImportError:
             raise ImportError("claude-agent-sdk package not installed. Run: pip install claude-agent-sdk")
 
         self.sdk = claude_agent_sdk
-        self.model = os.getenv('CLAUDE_CODE_MODEL')
+        self.model = model or os.getenv('CLAUDE_CODE_MODEL')
 
     def complete(self, prompt: str) -> str:
         return asyncio.run(self._query(prompt)).strip()

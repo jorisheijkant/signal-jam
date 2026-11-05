@@ -250,13 +250,14 @@ async function searchPosts({ term, frameId, platform, startDate, endDate, onlyTh
   return { data, error, count }
 }
 
-async function searchArticles({ term, relatedTerms, startDate, endDate }, limit = 20, offset = 0) {
+async function searchArticles({ term, onlyThemeArticles, sources, startDate, endDate }, limit = 20, offset = 0) {
   let query = client
     .from('articles')
-    .select('url, title, source, language, summary, content, published_at')
+    .select('url, title, title_en, source, language, summary, content, content_en, published_at')
 
   if (term) query = query.or(buildArticleTermsFilter([term]))
-  if (relatedTerms) query = query.or(buildArticleTermsFilter(relatedTerms))
+  if (onlyThemeArticles) query = query.eq('relevant_for_signal_jam_theme', true)
+  if (sources) query = query.in('source', sources)
   if (startDate) query = query.gte('published_at', startDate)
   if (endDate) query = query.lte('published_at', `${endDate}T23:59:59`)
 

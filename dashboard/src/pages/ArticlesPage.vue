@@ -28,10 +28,18 @@
       </label>
     </form>
 
-    <ul class="max-w-3xl mx-auto flex flex-wrap gap-x-4 gap-y-1 mb-6 text-xs text-gray-600" aria-label="Legenda">
-      <li v-for="source in ARTICLE_SOURCE_NAMES" :key="source" class="flex items-center gap-1.5">
-        <span class="inline-block w-2.5 h-2.5 rounded-full" :class="getArticleSourceStyle(source).dotClass"></span>
-        {{ source }}
+    <ul class="max-w-3xl mx-auto flex flex-wrap gap-x-4 gap-y-1 mb-6 text-xs text-gray-600" aria-label="Bronnen">
+      <li v-for="source in ARTICLE_SOURCE_NAMES" :key="source">
+        <button
+          type="button"
+          :aria-pressed="isSourceEnabled(source)"
+          @click="toggleSource(source)"
+          class="flex items-center gap-1.5 cursor-pointer transition-opacity"
+          :class="isSourceEnabled(source) ? '' : 'opacity-40 line-through'"
+        >
+          <span class="inline-block w-2.5 h-2.5 rounded-full" :class="getArticleSourceStyle(source).dotClass"></span>
+          {{ source }}
+        </button>
       </li>
     </ul>
 
@@ -66,8 +74,11 @@
           rel="noopener noreferrer"
           class="font-medium text-gray-800 hover:text-blue-600"
         >
-          {{ article.title }}
+          {{ getArticleTitle(article) }}
         </a>
+        <p v-if="isArticleTranslated(article)" class="text-xs text-gray-400 mt-1">
+          Automatisch vertaald naar het Engels. Origineel: {{ article.title }}
+        </p>
         <p v-if="getArticleExcerpt(article)" class="text-sm text-gray-600 leading-relaxed mt-2">
           {{ getArticleExcerpt(article) }}
         </p>
@@ -90,14 +101,14 @@
 import { ref, onMounted } from 'vue'
 import { searchArticles } from '../database'
 import PasswordGate from '../components/PasswordGate.vue'
-import { NETHERLANDS_SEARCH_TERMS } from '../utils/netherlandsSearchTerms.js'
 import { ARTICLE_SOURCE_NAMES, getArticleSourceStyle } from '../utils/articleSources.js'
-import { formatArticleDate, getArticleExcerpt } from '../utils/articles.js'
+import { formatArticleDate, getArticleExcerpt, getArticleTitle, isArticleTranslated } from '../utils/articles.js'
 
 const PAGE_SIZE = 20
 
 const term = ref('')
 const onlyAboutNetherlands = ref(true)
+const enabledSources = ref([...ARTICLE_SOURCE_NAMES])
 const startDate = ref('')
 const endDate = ref('')
 const articles = ref([])
@@ -105,12 +116,28 @@ const hasMore = ref(false)
 const loading = ref(false)
 const isSearching = ref(false)
 
+function isSourceEnabled(source) {
+  return enabledSources.value.includes(source)
+}
+
+function areAllSourcesEnabled() {
+  return enabledSources.value.length === ARTICLE_SOURCE_NAMES.length
+}
+
+async function toggleSource(source) {
+  enabledSources.value = isSourceEnabled(source)
+    ? enabledSources.value.filter(enabledSource => enabledSource !== source)
+    : [...enabledSources.value, source]
+  await runSearch()
+}
+
 async function fetchPage(offset) {
   loading.value = true
   const { data, error } = await searchArticles(
     {
       term: term.value || null,
-      relatedTerms: onlyAboutNetherlands.value ? NETHERLANDS_SEARCH_TERMS : null,
+      onlyThemeArticles: onlyAboutNetherlands.value,
+      sources: areAllSourcesEnabled() ? null : enabledSources.value,
       startDate: startDate.value || null,
       endDate: endDate.value || null,
     },

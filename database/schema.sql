@@ -123,8 +123,11 @@ CREATE TABLE articles (
     language     VARCHAR(10),
     summary      TEXT,
     content      TEXT,
+    title_en     TEXT,                           -- English translation, filled by the translation step
+    content_en   TEXT,
     published_at TIMESTAMPTZ NOT NULL,
-    scraped_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    scraped_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    relevant_for_signal_jam_theme BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- Supabase: enable row level security and let the dashboard read articles with the publishable key.
@@ -140,6 +143,7 @@ CREATE INDEX idx_posts_post_type ON posts(post_type);
 CREATE INDEX idx_posts_is_checked ON posts(is_checked);
 CREATE INDEX idx_posts_is_relevant ON posts(is_relevant);
 CREATE INDEX idx_posts_relevant_for_signal_jam_theme ON posts(relevant_for_signal_jam_theme);
+CREATE INDEX idx_articles_relevant_for_signal_jam_theme ON articles(relevant_for_signal_jam_theme);
 CREATE INDEX idx_accounts_is_approved ON accounts(is_approved);
 CREATE INDEX idx_accounts_platform ON accounts(platform);
 CREATE INDEX idx_post_reposts_post_id ON post_reposts(post_id);
