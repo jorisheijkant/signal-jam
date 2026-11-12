@@ -1,7 +1,14 @@
 const EXCERPT_LENGTH = 300
 
 export function formatArticleDate(timestamp) {
-  return new Date(timestamp).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(timestamp).toLocaleString('nl-NL', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
 }
 
 export function isArticleTranslated(article) {
