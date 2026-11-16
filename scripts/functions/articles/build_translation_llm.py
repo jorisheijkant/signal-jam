@@ -8,7 +8,11 @@ DEFAULT_OLLAMA_TRANSLATION_MODEL = 'gemma4:latest'
 def build_translation_llm():
     """The LLM for translating articles, configured through TRANSLATION_PROVIDER and TRANSLATION_MODEL in .env.
 
-    Returns None when it cannot be set up (for example a missing package), so scraping can go on untranslated."""
+    Returns None when translation is switched off with TRANSLATION_ENABLED=false, or when it cannot be set up
+    (for example a missing package), so scraping can go on untranslated."""
+    if os.getenv('TRANSLATION_ENABLED', 'true').lower() != 'true':
+        print("[translation disabled] TRANSLATION_ENABLED is not true")
+        return None
     provider_name = os.getenv('TRANSLATION_PROVIDER', 'ollama')
     model = os.getenv('TRANSLATION_MODEL') or (DEFAULT_OLLAMA_TRANSLATION_MODEL if provider_name == 'ollama' else None)
     try:
