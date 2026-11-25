@@ -7,7 +7,7 @@
       <p class="text-sm text-red-400">Let op: dit is informatie van Russische propagandakanalen. Neem deze niet zomaar voor waar aan en probeer deze niet verder te verspreiden. Veel van de sites zul je vanwege Nederlandse blokkades niet kunnen bezoeken.       </p>
     </div>
 
-    <form @submit.prevent="submitSearch" class="max-w-3xl mx-auto flex flex-wrap gap-3 mb-6">
+    <form @submit.prevent="runSearch" class="max-w-3xl mx-auto flex flex-wrap gap-3 mb-6">
       <input
         v-model="term"
         type="text"
@@ -151,11 +151,6 @@ async function fetchPage(offset) {
   }
   hasMore.value = data.length === PAGE_SIZE
   return data
-}
-
-async function submitSearch() {
-  if (term.value) onlyAboutNetherlands.value = false
-  await runSearch()
 }
 
 async function runSearch() {
